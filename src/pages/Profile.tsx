@@ -27,18 +27,17 @@ const Profile = () => {
   const isUsers = activeFilter === "Users";
 
   // Memoize current data and loading state
-  const { currentData, currentLoading, resultsCount, totalCount } =
-    useMemo(() => {
-      const data = isUsers ? UsersData : GroupsData;
-      const loading = isUsers ? UsersDataLoading : GroupsDataLoading;
+  const { currentLoading, resultsCount, totalCount } = useMemo(() => {
+    const data = isUsers ? UsersData : GroupsData;
+    const loading = isUsers ? UsersDataLoading : GroupsDataLoading;
 
-      return {
-        currentData: data,
-        currentLoading: loading,
-        resultsCount: data?.results?.length || 0,
-        totalCount: data?.total || 0,
-      };
-    }, [isUsers, UsersData, GroupsData, UsersDataLoading, GroupsDataLoading]);
+    return {
+      currentData: data,
+      currentLoading: loading,
+      resultsCount: data?.results?.length || 0,
+      totalCount: data?.total || 0,
+    };
+  }, [isUsers, UsersData, GroupsData, UsersDataLoading, GroupsDataLoading]);
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);

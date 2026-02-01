@@ -126,7 +126,7 @@ const badgeStats = [
 const Verification = () => {
   const [searchValue, setSearchValue] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
-  const [timeFilter, setTimeFilter] = useState("This Month");
+  const [timeFilter] = useState("This Month");
   const [openVerificationDrawer, setOpenVerificationDrawer] = useState(false);
 
   const getStatusBadge = (status: string) => {

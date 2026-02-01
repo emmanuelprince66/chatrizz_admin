@@ -55,7 +55,7 @@ export function Sidebar() {
 
   const NavItem = ({
     item,
-    isBottom = false,
+    // isBottom = false,
   }: {
     item: NavItemType;
     isBottom?: boolean;

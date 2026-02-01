@@ -25,7 +25,7 @@ const RecentReportsTable = ({
 
   // Calculate pagination values
   const totalPages = response?.data?.pages || 1;
-  const totalItems = response?.data?.total || 0;
+  // const totalItems = response?.data?.total || 0;
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage); // Update local state immediately for UI responsiveness

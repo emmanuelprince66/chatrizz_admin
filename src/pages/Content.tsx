@@ -24,14 +24,14 @@ const dummyUsers = [
   // ... (rest of the dummyUsers array remains unchanged)
 ];
 
-const accountTypes = ["All Types", "Basic", "Premium", "Enterprise"];
-const statuses = ["All Status", "Active", "Inactive", "Suspended"];
+// const accountTypes = ["All Types", "Basic", "Premium", "Enterprise"];
+// const statuses = ["All Status", "Active", "Inactive", "Suspended"];
 
 const Content = () => {
   const [searchValue, setSearchValue] = useState("");
-  const [selectedAccountType, setSelectedAccountType] = useState("All Types");
-  const [selectedStatus, setSelectedStatus] = useState("All Status");
-  const [users, setUsers] = useState(dummyUsers);
+  const [selectedAccountType] = useState("All Types");
+  const [selectedStatus] = useState("All Status");
+  const [users] = useState(dummyUsers);
   const [activeFilter, setActiveFilter] = useState("Posts");
   // Filter users based on search and filters
   const filteredUsers = users.filter((user) => {
@@ -76,16 +76,16 @@ const Content = () => {
     }
   };
 
-  const clearFilters = () => {
-    setSelectedAccountType("All Types");
-    setSelectedStatus("All Status");
-    setSearchValue("");
-  };
+  // const clearFilters = () => {
+  //   setSelectedAccountType("All Types");
+  //   setSelectedStatus("All Status");
+  //   setSearchValue("");
+  // };
 
-  const hasActiveFilters =
-    selectedAccountType !== "All Types" ||
-    selectedStatus !== "All Status" ||
-    searchValue !== "";
+  // const hasActiveFilters =
+  //   selectedAccountType !== "All Types" ||
+  //   selectedStatus !== "All Status" ||
+  //   searchValue !== "";
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 w-full">

@@ -107,31 +107,31 @@ const statsData = [
   },
 ];
 
-const badgeStats = [
-  {
-    type: "Individual Badge",
-    count: "1.4k",
-    color: "bg-blue-100 text-blue-700",
-    icon: User,
-  },
-  {
-    type: "Business Badge",
-    count: "1k",
-    color: "bg-green-100 text-green-700",
-    icon: Building,
-  },
-  {
-    type: "Organization Badge",
-    count: "1k",
-    color: "bg-yellow-100 text-yellow-700",
-    icon: Building2,
-  },
-];
+// const badgeStats = [
+//   {
+//     type: "Individual Badge",
+//     count: "1.4k",
+//     color: "bg-blue-100 text-blue-700",
+//     icon: User,
+//   },
+//   {
+//     type: "Business Badge",
+//     count: "1k",
+//     color: "bg-green-100 text-green-700",
+//     icon: Building,
+//   },
+//   {
+//     type: "Organization Badge",
+//     count: "1k",
+//     color: "bg-yellow-100 text-yellow-700",
+//     icon: Building2,
+//   },
+// ];
 
 const Market = () => {
   const [searchValue, setSearchValue] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
-  const [timeFilter, setTimeFilter] = useState("This Month");
+  const [timeFilter] = useState("This Month");
 
   const getStatusBadge = (status: string) => {
     const statusStyles = {

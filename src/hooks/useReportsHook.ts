@@ -2,13 +2,13 @@ import { useFetchReportsQuery } from "@/api/reports/fetch-reports";
 import { useMemo } from "react";
 import { useDebounce } from "./useDebounce";
 
-interface UseReportsHookProps {
-  searchInput: string;
-  page: number;
-  reason?: string;
-  status?: string;
-  pageSize?: number;
-}
+// interface UseReportsHookProps {
+//   searchInput: string;
+//   page: number;
+//   reason?: string;
+//   status?: string;
+//   pageSize?: number;
+// }
 
 export const useReportsHook = ({
   searchInput,

@@ -92,9 +92,9 @@ export const useReportsRecentColumns = () => {
         const [openViewDetails, setOpenViewDetails] = useState(false);
         const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-        const openViewDetailsFunc = () => {
-          setOpenViewDetails(true);
-        };
+        // const openViewDetailsFunc = () => {
+        //   setOpenViewDetails(true);
+        // };
 
         const handleDelete = () => {
           // Implement delete logic here, e.g., API call

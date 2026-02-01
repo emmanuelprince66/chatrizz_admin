@@ -18,12 +18,12 @@ import Verification from "@/pages/Verification";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 // Placeholder pages
-const PlaceholderPage = ({ title }: { title: string }) => (
-  <div className="space-y-6">
-    <h1 className="text-3xl font-bold">{title}</h1>
-    <p className="text-muted-foreground">This page is under construction.</p>
-  </div>
-);
+// const PlaceholderPage = ({ title }: { title: string }) => (
+//   <div className="space-y-6">
+//     <h1 className="text-3xl font-bold">{title}</h1>
+//     <p className="text-muted-foreground">This page is under construction.</p>
+//   </div>
+// );
 
 export const router = createBrowserRouter([
   {

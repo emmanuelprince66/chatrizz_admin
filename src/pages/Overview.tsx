@@ -48,15 +48,15 @@ interface LocationData {
   percentage: number;
 }
 
-interface ReportData {
-  id: string;
-  reporter: string;
-  contentType: string;
-  reason: string;
-  date: string;
-  status: string;
-  count?: number;
-}
+// interface ReportData {
+//   id: string;
+//   reporter: string;
+//   contentType: string;
+//   reason: string;
+//   date: string;
+//   status: string;
+//   count?: number;
+// }
 
 const OverviewSkeleton = () => (
   <div className="min-h-screen">
@@ -163,7 +163,7 @@ const Overview = () => {
     from: new Date(),
     to: new Date(),
   });
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput] = useState("");
   const [page, setPage] = useState(1);
 
   const { OverviewData, OverviewDataLoading } = useOverviewHook({

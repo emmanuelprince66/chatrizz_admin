@@ -184,7 +184,7 @@ export const useNotificationColumns = () => {
     {
       id: "actions",
       header: "Action",
-      cell: ({ row }) => {
+      cell: ({}) => {
         // const notification = row.original;
 
         return (

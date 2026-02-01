@@ -185,7 +185,7 @@ export const useNotificationColumns = () => {
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
-        const notification = row.original;
+        // const notification = row.original;
 
         return (
           <DropdownMenu>

@@ -122,7 +122,7 @@ const statsData = [
 
 const Payments = () => {
   const [searchValue, setSearchValue] = useState("");
-  const [activeFilter, setActiveFilter] = useState("All");
+  // const [activeFilter, setActiveFilter] = useState("All");
   const [timeFilter] = useState("This Month");
 
   const getStatusBadge = (status: string) => {
@@ -154,7 +154,7 @@ const Payments = () => {
     return <IconComponent className="w-4 h-4 text-gray-600" />;
   };
 
-  const filterButtons = ["All", "Approved", "Pending", "Rejected"];
+  // const filterButtons = ["All", "Approved", "Pending", "Rejected"];
 
   return (
     <div className="min-h-screen ">

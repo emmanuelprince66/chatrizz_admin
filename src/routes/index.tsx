@@ -2,7 +2,7 @@ import AdminManagement from "@/components/app/settings/AdminManagement";
 import ResetPassword from "@/components/app/settings/ResetPassword";
 import { Layout } from "@/components/layout/Layout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoutes";
-import Analytics from "@/pages/Analytics";
+import Ads from "@/pages/Ads";
 import { Login } from "@/pages/auth/Login";
 import Content from "@/pages/Content";
 import Help from "@/pages/Help";
@@ -67,8 +67,8 @@ export const router = createBrowserRouter([
         element: <Reports />,
       },
       {
-        path: "analytics",
-        element: <Analytics />,
+        path: "ads",
+        element: <Ads />,
       },
       {
         path: "payments",

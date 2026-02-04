@@ -48,8 +48,8 @@ export const links = [
         icon: Star,
       },
       {
-        name: "Analytics",
-        href: "/analytics",
+        name: "Ads",
+        href: "/ads",
         icon: ChartPie,
       },
       {

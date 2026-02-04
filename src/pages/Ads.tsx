@@ -75,7 +75,7 @@ const verificationData = [
 const statsData = [
   {
     id: 1,
-    title: "Total Revenue",
+    title: "Total Ads",
     count: "3,434",
     icon: CheckCircle,
     bgColor: "bg-slate-800",
@@ -83,7 +83,7 @@ const statsData = [
   },
   {
     id: 2,
-    title: "Badges",
+    title: "Active Ads",
     count: "3400",
     icon: Users,
     bgColor: "bg-slate-800",
@@ -91,7 +91,15 @@ const statsData = [
   },
   {
     id: 3,
-    title: "Ads",
+    title: "Inactive Ads ",
+    count: "34",
+    icon: UserX,
+    bgColor: "bg-slate-800",
+    iconColor: "text-white",
+  },
+  {
+    id: 4,
+    title: "Total Revenue",
     count: "34",
     icon: UserX,
     bgColor: "bg-slate-800",
@@ -120,7 +128,7 @@ const statsData = [
 //   },
 // ];
 
-const Payments = () => {
+const ADs = () => {
   const [searchValue, setSearchValue] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const [timeFilter] = useState("This Month");
@@ -162,7 +170,7 @@ const Payments = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 gap-4">
           <h1 className="text-3xl md:text-4xl font--[500] text-gray-900">
-            Payment
+            Ads/Promotion
           </h1>
 
           <div className="flex flex-col sm:flex-row gap-4">
@@ -240,22 +248,26 @@ const Payments = () => {
                     />
                   </th>
                   <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Transaction Id
+                    Add ID
                   </th>
                   <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    User
+                    Engagements(Clicks/Views)
                   </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Amount
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Source
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Date
-                  </th>
+
                   <th className="text-left font-semibold text-gray-900 px-6 py-4">
                     Status
+                  </th>
+                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
+                    Duration
+                  </th>
+                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
+                    Revenue
+                  </th>
+                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
+                    Start Date
+                  </th>
+                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
+                    End Date
                   </th>
                   <th className="text-left font-semibold text-gray-900 px-6 py-4">
                     Action
@@ -281,9 +293,9 @@ const Payments = () => {
                       <div className="flex items-center gap-2">
                         {getTypeIcon(item.type)}
                         <span className="text-gray-700">{item.type}</span>
-                        <span className="text-gray-700">{item.type}</span>
                       </div>
                     </td>
+                    <td className="px-6 py-4 text-gray-600">{item.plan}</td>
                     <td className="px-6 py-4 text-gray-600">{item.plan}</td>
                     <td className="px-6 py-4 text-gray-600">{item.plan}</td>
                     <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
@@ -385,4 +397,4 @@ const Payments = () => {
   );
 };
 
-export default Payments;
+export default ADs;

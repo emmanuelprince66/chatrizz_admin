@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 import { CustomCard } from "@/components/app/CustomCard";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import EngagementChart from "@/components/overview/EngagementChart";
@@ -48,24 +50,9 @@ interface LocationData {
   percentage: number;
 }
 
-// interface ReportData {
-//   id: string;
-//   reporter: string;
-//   contentType: string;
-//   reason: string;
-//   date: string;
-//   status: string;
-//   count?: number;
-// }
-
 const OverviewSkeleton = () => (
   <div className="min-h-screen">
     <div className="container mx-auto">
-      {/* <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 gap-4">
-        <Skeleton className="h-10 w-48 bg-purple-200" />
-        <Skeleton className="h-10 w-64 bg-purple-200" />
-      </div> */}
-
       {/* Stats Cards Skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         {[1, 2, 3, 4].map((i) => (
@@ -128,17 +115,32 @@ const OverviewSkeleton = () => (
 );
 
 const StatsCard = ({ title, value, icon, trend }: StatsCardProps) => (
-  <CustomCard className="w-full p-6 bg-slate-900 border-slate-800 flex flex-col items-center justify-center text-center">
-    {icon && <div className="mb-3 text-2xl">{icon}</div>}
-    <h3 className="text-sm font-medium text-slate-300 mb-2">{title}</h3>
-    <p className="text-3xl font-bold text-white">{value}</p>
-    {trend && <p className="text-xs text-emerald-400 mt-1">{trend}</p>}
+  <CustomCard className="w-full p-6 bg-slate-900 border-0 flex flex-col justify-between rounded-2xl h-32">
+    <div className="flex flex-row items-center gap-3">
+      {icon && (
+        <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-lg flex-shrink-0">
+          {icon}
+        </div>
+      )}
+      <h3 className="text-sm font-medium text-slate-400">{title}</h3>
+    </div>
+    <div className="flex flex-col items-end">
+      <p className="text-3xl font-bold text-white">{value}</p>
+      {trend && <p className="text-xs text-emerald-400 mt-0.5">{trend}</p>}
+    </div>
   </CustomCard>
 );
 
 const LocationCard = ({ data }: { data: LocationData }) => (
   <CustomCard className="w-full p-4 bg-white border-gray-200 flex flex-col">
-    <h4 className="text-base font-semibold text-gray-900 mb-2">{data.name}</h4>
+    <div className="flex items-center justify-between mb-2">
+      <h4 className="text-base font-semibold text-gray-900">{data.name}</h4>
+      {data.percentage === 20 && (
+        <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center text-sm font-bold text-purple-700">
+          M
+        </div>
+      )}
+    </div>
     <p className="text-sm text-gray-600 mb-3">
       {data.activeUsers.toLocaleString()} Active Users |{" "}
       {data.postsThisWeek.toLocaleString()} Posts this week |{" "}
@@ -175,10 +177,10 @@ const Overview = () => {
   console.log("OverviewData", OverviewData);
   console.log("OverviewDataLoading", OverviewDataLoading);
 
-  // Show skeleton while loading
-
   // Extract real data from API
   const apiData = OverviewData;
+
+  console.log("apiData", apiData);
 
   const statsData = [
     {
@@ -208,7 +210,6 @@ const Overview = () => {
     },
   ];
 
-  // Keep location data as dummy for now
   const locationData: LocationData[] = [
     {
       name: "Lagos",
@@ -239,6 +240,10 @@ const Overview = () => {
       percentage: 10,
     },
   ];
+
+  // Check if engagement data exists
+
+  const hasEngagementData = apiData?.trend;
 
   return (
     <div className="min-h-screen">
@@ -272,14 +277,21 @@ const Overview = () => {
                 </div>
               </CustomCard>
 
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                  Top Locations
-                </h3>
-                {locationData.map((loc, index) => (
-                  <LocationCard key={index} data={loc} />
-                ))}
-              </div>
+              <CustomCard className="p-6 bg-white border-gray-200 flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    Top Locations
+                  </h3>
+                  <button className="text-blue-600 text-sm font-medium hover:text-blue-700">
+                    See All
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {locationData.map((loc, index) => (
+                    <LocationCard key={index} data={loc} />
+                  ))}
+                </div>
+              </CustomCard>
             </div>
 
             {/* Reports Table with Real Data */}

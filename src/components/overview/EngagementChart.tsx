@@ -9,6 +9,7 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
+import { TrendingUp } from "lucide-react";
 import { useMemo, useRef } from "react";
 import { Line } from "react-chartjs-2";
 
@@ -21,7 +22,7 @@ Chart.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 interface TrendData {
@@ -34,6 +35,20 @@ interface TrendData {
 interface EngagementChartProps {
   trendData?: TrendData;
 }
+
+const EmptyChartState = () => (
+  <div className="h-64 flex flex-col items-center justify-center text-gray-400">
+    <div className="w-16 h-16 mb-4 flex items-center justify-center">
+      <TrendingUp className="w-full h-full" strokeWidth={1.5} />
+    </div>
+    <p className="text-lg font-medium text-gray-500">
+      No engagement data available
+    </p>
+    <p className="text-sm mt-2 text-gray-400">
+      Data will appear here once available
+    </p>
+  </div>
+);
 
 const EngagementChart = ({ trendData }: EngagementChartProps) => {
   const chartRef = useRef<Chart<"line"> | null>(null);
@@ -134,11 +149,7 @@ const EngagementChart = ({ trendData }: EngagementChartProps) => {
 
   // If no data, show empty state
   if (!processedData || processedData.length === 0) {
-    return (
-      <div className="h-full w-full flex items-center justify-center text-gray-500">
-        No engagement data available for the selected period
-      </div>
-    );
+    return <EmptyChartState />;
   }
 
   const data = {

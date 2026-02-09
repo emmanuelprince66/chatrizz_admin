@@ -174,9 +174,15 @@ export function CustomTable<TData>({
     const isFirst = index === 0;
     const isLast = index === totalHeaders - 1;
 
-    return `px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider bg-gray-50/80 border-0 ${
-      isFirst ? "rounded-l-[40px]" : ""
-    } ${isLast ? "rounded-r-[40px]" : ""} ${
+    let borderClass = "border-t-2 border-b-2 border-cyan-500";
+    if (isFirst) {
+      borderClass += " border-l-2 rounded-tl-[40px]";
+    }
+    if (isLast) {
+      borderClass += " border-r-2 rounded-tr-[40px]";
+    }
+
+    return `px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider bg-gray-50/80 ${borderClass} ${
       canSort
         ? "cursor-pointer select-none hover:bg-gray-100 transition-colors"
         : ""

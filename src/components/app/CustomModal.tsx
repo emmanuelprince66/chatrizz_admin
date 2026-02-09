@@ -16,6 +16,7 @@ interface ModalProps {
   title: string;
   description?: string;
   children: ReactNode;
+  className?: string;
   trigger?: ReactNode;
 }
 
@@ -23,6 +24,7 @@ export function CustomModal({
   isOpen,
   onClose,
   title,
+  className = "md:max-w-[600px]",
   description,
   children,
   trigger,
@@ -34,7 +36,9 @@ export function CustomModal({
           <div className="cursor-pointer">{trigger}</div>
         </DialogTrigger>
       )}
-      <DialogContent className="w-full max-w-[90vw] sm:max-w-[425px] md:max-w-[600px] max-h-[90vh] md:max-h-[95vh]  overflow-y-auto bg-white z-50 border-0 rounded-lg p-6">
+      <DialogContent
+        className={`w-full max-w-[90vw] sm:max-w-[425px] ${className} max-h-[90vh] md:max-h-[95vh]  overflow-y-auto bg-white z-50 border-0 rounded-lg p-6`}
+      >
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">{title}</DialogTitle>
           {description && (

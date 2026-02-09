@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner"; // or your toast library
+import ViewProfile from "./ViewProfile";
 
 // Define the UserInfo type based on the API response
 interface UserInfo {
@@ -173,6 +174,7 @@ export const useUsersColumns = () => {
       cell: ({ row }) => {
         const user = row.original;
         const [showSuspendedModal, setShowSuspendedModal] = useState(false);
+        const [showViewProfile, setShowViewProfile] = useState(false);
         // const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
         const suspendUserMutation = useSuspendUserMutation();
         const isSuspended = user?.is_active === false;
@@ -217,12 +219,24 @@ export const useUsersColumns = () => {
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:bg-green-50 hover:text-green-600"
                   } */}
+
                 <DropdownMenuItem
                   onClick={() => setShowSuspendedModal(true)}
                   disabled={isSuspended || isSuspending}
                   className={`cursor-pointer px-4 py-2 transition-colors flex items-center`}
                 >
                   {isSuspended ? <>User Suspended</> : <>Suspend User</>}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setShowViewProfile(true)}
+                  className={`cursor-pointer px-4 py-2 transition-colors flex items-center`}
+                >
+                  View Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className={`cursor-pointer px-4 py-2 text-red-500 transition-colors flex items-center`}
+                >
+                  Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -281,6 +295,17 @@ export const useUsersColumns = () => {
                   </button>
                 </div>
               </div>
+            </CustomModal>
+
+            {/* view profile */}
+            <CustomModal
+              isOpen={showViewProfile}
+              onClose={() => setShowViewProfile(false)}
+              trigger={false}
+              title="Profile"
+              className="md:max-w-[70%]"
+            >
+              <ViewProfile />
             </CustomModal>
           </>
         );

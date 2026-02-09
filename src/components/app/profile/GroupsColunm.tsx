@@ -80,13 +80,16 @@ export const useGroupsColumns = () => {
               >
                 <a href={`/groups/${group.id}`}>
                   <DropdownMenuItem className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors">
-                    View
+                    View group page
                   </DropdownMenuItem>
                 </a>
 
+                <DropdownMenuItem className="cursor-pointer px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center">
+                  Block
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={confirmDelete}
-                  className="cursor-pointer px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center"
+                  className="cursor-pointer text-red-500 px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete

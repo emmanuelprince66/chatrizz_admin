@@ -243,7 +243,7 @@ const Overview = () => {
 
   // Check if engagement data exists
 
-  const hasEngagementData = apiData?.trend;
+  // const hasEngagementData = apiData?.trend;
 
   return (
     <div className="min-h-screen">

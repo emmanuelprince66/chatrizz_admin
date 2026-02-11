@@ -40,7 +40,7 @@ const ViewProfile = ({ userId }: ViewProfileProps) => {
   const {
     data: contentData,
     isLoading: contentLoading,
-    isError: contentError,
+    // isError: contentError,
   } = useFetchUserContentQuery({
     params: {
       userId,

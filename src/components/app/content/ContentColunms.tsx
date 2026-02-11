@@ -167,7 +167,8 @@ export const useContentColumns = () => {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const content = row.original;
+        console.log("row", row);
+        // const content = row.original;
         // You can add actual status logic here if available in your API
         const isActive = true; // Placeholder - replace with actual status logic
 

@@ -169,6 +169,7 @@ export const useReviewsColumns = () => {
       header: "Status",
       cell: ({ row }) => {
         const review = row.original;
+        console.log("review", review);
         const isActive = true;
 
         return (

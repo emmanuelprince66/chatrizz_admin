@@ -131,6 +131,7 @@ export const usePostsColumns = () => {
       header: "Status",
       cell: ({ row }) => {
         const post = row.original;
+        console.log("post", post);
         const isActive = true; // You can add logic for this
 
         return (

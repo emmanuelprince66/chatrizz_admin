@@ -42,13 +42,13 @@ interface StatsCardProps {
   trend?: string;
 }
 
-interface LocationData {
-  name: string;
-  activeUsers: number;
-  postsThisWeek: number;
-  marketplaceInteractions: number;
-  percentage: number;
-}
+// interface LocationData {
+//   name: string;
+//   activeUsers: number;
+//   postsThisWeek: number;
+//   marketplaceInteractions: number;
+//   percentage: number;
+// }
 
 const OverviewSkeleton = () => (
   <div className="min-h-screen">

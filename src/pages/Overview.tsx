@@ -125,40 +125,40 @@ const StatsCard = ({ title, value, icon, trend }: StatsCardProps) => (
       <h3 className="text-sm font-medium text-slate-400">{title}</h3>
     </div>
     <div className="flex flex-col items-end">
-      <p className="text-3xl font-bold text-white">{value}</p>
+      <p className="text-1xl font-bold text-white">{value}</p>
       {trend && <p className="text-xs text-emerald-400 mt-0.5">{trend}</p>}
     </div>
   </CustomCard>
 );
 
-const LocationCard = ({ data }: { data: LocationData }) => (
-  <CustomCard className="w-full p-4 bg-white border-gray-200 flex flex-col">
-    <div className="flex items-center justify-between mb-2">
-      <h4 className="text-base font-semibold text-gray-900">{data.name}</h4>
-      {data.percentage === 20 && (
-        <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center text-sm font-bold text-purple-700">
-          M
-        </div>
-      )}
-    </div>
-    <p className="text-sm text-gray-600 mb-3">
-      {data.activeUsers.toLocaleString()} Active Users |{" "}
-      {data.postsThisWeek.toLocaleString()} Posts this week |{" "}
-      {data.marketplaceInteractions.toLocaleString()} Marketplace Interactions
-    </p>
-    <div className="flex items-center justify-between">
-      <div className="w-full bg-gray-200 rounded-full h-2 mr-3">
-        <div
-          className="bg-blue-500 h-2 rounded-full"
-          style={{ width: `${data.percentage}%` }}
-        ></div>
-      </div>
-      <span className="text-sm font-semibold text-blue-600 min-w-fit">
-        {data.percentage}%
-      </span>
-    </div>
-  </CustomCard>
-);
+// const LocationCard = ({ data }: { data: LocationData }) => (
+//   <CustomCard className="w-full p-4 bg-white border-gray-200 flex flex-col">
+//     <div className="flex items-center justify-between mb-2">
+//       <h4 className="text-base font-semibold text-gray-900">{data.name}</h4>
+//       {data.percentage === 20 && (
+//         <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center text-sm font-bold text-purple-700">
+//           M
+//         </div>
+//       )}
+//     </div>
+//     <p className="text-sm text-gray-600 mb-3">
+//       {data.activeUsers.toLocaleString()} Active Users |{" "}
+//       {data.postsThisWeek.toLocaleString()} Posts this week |{" "}
+//       {data.marketplaceInteractions.toLocaleString()} Marketplace Interactions
+//     </p>
+//     <div className="flex items-center justify-between">
+//       <div className="w-full bg-gray-200 rounded-full h-2 mr-3">
+//         <div
+//           className="bg-blue-500 h-2 rounded-full"
+//           style={{ width: `${data.percentage}%` }}
+//         ></div>
+//       </div>
+//       <span className="text-sm font-semibold text-blue-600 min-w-fit">
+//         {data.percentage}%
+//       </span>
+//     </div>
+//   </CustomCard>
+// );
 
 const Overview = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -210,36 +210,36 @@ const Overview = () => {
     },
   ];
 
-  const locationData: LocationData[] = [
-    {
-      name: "Lagos",
-      activeUsers: 12430,
-      postsThisWeek: 2100,
-      marketplaceInteractions: 850,
-      percentage: 45,
-    },
-    {
-      name: "Abuja",
-      activeUsers: 8520,
-      postsThisWeek: 1650,
-      marketplaceInteractions: 650,
-      percentage: 30,
-    },
-    {
-      name: "Rivers",
-      activeUsers: 4200,
-      postsThisWeek: 980,
-      marketplaceInteractions: 420,
-      percentage: 15,
-    },
-    {
-      name: "Kaduna",
-      activeUsers: 2800,
-      postsThisWeek: 650,
-      marketplaceInteractions: 280,
-      percentage: 10,
-    },
-  ];
+  // const locationData: LocationData[] = [
+  //   {
+  //     name: "Lagos",
+  //     activeUsers: 12430,
+  //     postsThisWeek: 2100,
+  //     marketplaceInteractions: 850,
+  //     percentage: 45,
+  //   },
+  //   {
+  //     name: "Abuja",
+  //     activeUsers: 8520,
+  //     postsThisWeek: 1650,
+  //     marketplaceInteractions: 650,
+  //     percentage: 30,
+  //   },
+  //   {
+  //     name: "Rivers",
+  //     activeUsers: 4200,
+  //     postsThisWeek: 980,
+  //     marketplaceInteractions: 420,
+  //     percentage: 15,
+  //   },
+  //   {
+  //     name: "Kaduna",
+  //     activeUsers: 2800,
+  //     postsThisWeek: 650,
+  //     marketplaceInteractions: 280,
+  //     percentage: 10,
+  //   },
+  // ];
 
   // Check if engagement data exists
 
@@ -267,7 +267,7 @@ const Overview = () => {
             </div>
 
             {/* Chart and Location Cards - Light Theme */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">
               <CustomCard className="p-6 bg-white border-gray-200">
                 <h3 className="text-xl font-semibold mb-6 text-gray-900">
                   Engagement Trend
@@ -277,7 +277,7 @@ const Overview = () => {
                 </div>
               </CustomCard>
 
-              <CustomCard className="p-6 bg-white border-gray-200 flex flex-col">
+              {/* <CustomCard className="p-6 bg-white border-gray-200 flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-semibold text-gray-900">
                     Top Locations
@@ -291,7 +291,7 @@ const Overview = () => {
                     <LocationCard key={index} data={loc} />
                   ))}
                 </div>
-              </CustomCard>
+              </CustomCard> */}
             </div>
 
             {/* Reports Table with Real Data */}

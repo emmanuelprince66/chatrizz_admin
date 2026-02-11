@@ -1,12 +1,12 @@
-// src/components/notifications/NotificationTable.tsx
+// src/components/admin/AdminTable.tsx
 
-import type { NotificationsApiResponse } from "@/api/notification/fetch-notification";
+import type { AdminsApiResponse } from "@/api/admin/fetch-admin";
 import { CustomTable } from "@/components/app/CustomTable";
 import { useMemo } from "react";
-import { useNotificationColumns } from "./NotificationColunm";
+import { useAdminColumns } from "./AdminColumns";
 
-interface NotificationTableProps {
-  response: NotificationsApiResponse | undefined;
+interface AdminTableProps {
+  response: AdminsApiResponse | undefined;
   loading: boolean;
   setPage: (page: number) => void;
   page: number;
@@ -14,9 +14,10 @@ interface NotificationTableProps {
   pageSize?: number;
   onEdit: (id: string) => void;
   onDelete?: (id: string) => void;
+  onSuspend?: (id: string) => void;
 }
 
-const NotificationTable = ({
+const AdminTable = ({
   response,
   loading,
   setPage,
@@ -25,8 +26,9 @@ const NotificationTable = ({
   pageSize = 10,
   onEdit,
   onDelete,
-}: NotificationTableProps) => {
-  const columns = useNotificationColumns({ onEdit, onDelete });
+  onSuspend,
+}: AdminTableProps) => {
+  const columns = useAdminColumns({ onEdit, onDelete, onSuspend });
 
   // Calculate pagination from total
   const paginationData = useMemo(() => {
@@ -57,7 +59,7 @@ const NotificationTable = ({
   return (
     <CustomTable
       loading={loading}
-      noDataText="No announcements found. Try adjusting your filters or create a new announcement."
+      noDataText="No admins found. Try adjusting your filters or create a new admin."
       columns={columns}
       data={paginationData.results}
       pagination={{
@@ -71,4 +73,4 @@ const NotificationTable = ({
   );
 };
 
-export default NotificationTable;
+export default AdminTable;

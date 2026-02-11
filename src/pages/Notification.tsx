@@ -1,3 +1,5 @@
+// src/pages/NotificationPage.tsx
+
 "use client";
 
 import { CustomModal } from "@/components/app/CustomModal";
@@ -23,6 +25,7 @@ const NotificationPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [editingNotificationId, setEditingNotificationId] = useState<any>(null);
 
   // Use the notifications hook
   const { NotificationsData, NotificationsDataLoading } = useNotifications({
@@ -31,6 +34,26 @@ const NotificationPage = () => {
     type: typeFilter,
     pageSize,
   });
+
+  // Handle edit
+  const handleEdit = (id: string) => {
+    console.log("hello");
+    console.log("Edit notification:", id);
+    setEditingNotificationId(id);
+    setIsCreateModalOpen(true);
+  };
+
+  // Handle delete (you can implement this later)
+  const handleDelete = (id: string) => {
+    console.log("Delete notification:", id);
+    // Implement delete logic
+  };
+
+  // Handle modal close
+  const handleModalClose = () => {
+    setIsCreateModalOpen(false);
+    setEditingNotificationId(null);
+  };
 
   return (
     <div className="min-h-screen">
@@ -176,18 +199,31 @@ const NotificationPage = () => {
             page={page}
             setPageSize={setPageSize}
             pageSize={pageSize}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         </div>
 
-        {/* Create Notification Modal */}
+        {/* Create/Edit Notification Modal */}
         <CustomModal
           isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          title="Create New Announcement"
-          description="Send a notification to your users"
+          onClose={handleModalClose}
+          title={
+            editingNotificationId
+              ? "Edit Announcement"
+              : "Create New Announcement"
+          }
+          description={
+            editingNotificationId
+              ? "Update the announcement details"
+              : "Send a notification to your users"
+          }
           trigger={false}
         >
-          <CreateNotification onClose={() => setIsCreateModalOpen(false)} />
+          <CreateNotification
+            onClose={handleModalClose}
+            notificationId={editingNotificationId}
+          />
         </CustomModal>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import AdminManagement from "@/components/app/settings/AdminManagement";
+import AdminManagementPage from "@/components/app/admin/AdminManagement";
 import ResetPassword from "@/components/app/settings/ResetPassword";
 import { Layout } from "@/components/layout/Layout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoutes";
@@ -88,7 +88,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "settings/admin-management",
-        element: <AdminManagement />,
+        element: <AdminManagementPage />,
       },
       {
         path: "settings/reset-password",

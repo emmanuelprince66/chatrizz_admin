@@ -19,7 +19,15 @@ import {
   Users,
 } from "lucide-react";
 
-export const useNotificationColumns = () => {
+interface UseNotificationColumnsProps {
+  onEdit: any;
+  onDelete?: (id: string) => void;
+}
+
+export const useNotificationColumns = ({
+  onEdit,
+  onDelete,
+}: UseNotificationColumnsProps) => {
   const columns: ColumnDef<Notification>[] = [
     {
       accessorKey: "id",
@@ -184,8 +192,8 @@ export const useNotificationColumns = () => {
     {
       id: "actions",
       header: "Action",
-      cell: ({}) => {
-        // const notification = row.original;
+      cell: ({ row }) => {
+        const notification = row.original;
 
         return (
           <DropdownMenu>
@@ -199,14 +207,22 @@ export const useNotificationColumns = () => {
               align="end"
               className="bg-white border border-gray-200 shadow-lg min-w-[160px]"
             >
-              <DropdownMenuItem className="cursor-pointer px-4 py-2 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center">
+              <DropdownMenuItem
+                className="cursor-pointer px-4 py-2 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center"
+                onClick={() => onEdit(notification.id)}
+              >
                 <Edit2 className="h-4 w-4 mr-2" />
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
+              {onDelete && (
+                <DropdownMenuItem
+                  className="cursor-pointer px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center"
+                  onClick={() => onDelete(notification.id)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );

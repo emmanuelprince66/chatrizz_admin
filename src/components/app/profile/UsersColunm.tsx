@@ -16,7 +16,7 @@ import {
   UserX,
 } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner"; // or your toast library
+import { toast } from "sonner";
 import ViewProfile from "./ViewProfile";
 
 // Define the UserInfo type based on the API response
@@ -175,7 +175,6 @@ export const useUsersColumns = () => {
         const user = row.original;
         const [showSuspendedModal, setShowSuspendedModal] = useState(false);
         const [showViewProfile, setShowViewProfile] = useState(false);
-        // const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
         const suspendUserMutation = useSuspendUserMutation();
         const isSuspended = user?.is_active === false;
         const isSuspending = suspendUserMutation.isPending;
@@ -183,23 +182,15 @@ export const useUsersColumns = () => {
         const handleSuspend = async () => {
           try {
             await suspendUserMutation.mutateAsync({ id: user.id });
-
-            toast.success("User Suspended successfully");
-
+            toast.success("User suspended successfully");
             setShowSuspendedModal(false);
           } catch (error) {
-            toast.error("Failed to resolve report", {
+            toast.error("Failed to suspend user", {
               description:
                 "Please try again or contact support if the issue persists.",
             });
           }
         };
-
-        // const handleDelete = () => {
-        //   // Implement delete logic here
-        //   console.log("Delete user:", user.id);
-        //   setShowDeleteConfirm(false);
-        // };
 
         return (
           <>
@@ -214,12 +205,6 @@ export const useUsersColumns = () => {
                 align="end"
                 className="bg-white border border-gray-200 shadow-lg min-w-[160px]"
               >
-                {/* ${
-                    isSuspended
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-green-50 hover:text-green-600"
-                  } */}
-
                 <DropdownMenuItem
                   onClick={() => setShowSuspendedModal(true)}
                   disabled={isSuspended || isSuspending}
@@ -241,17 +226,18 @@ export const useUsersColumns = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Suspend Modal */}
             <CustomModal
               isOpen={showSuspendedModal}
               onClose={() => setShowSuspendedModal(false)}
               trigger={false}
-              title="Confirm Resolve Report"
+              title="Confirm Suspend User"
             >
               <div className="p-6">
                 <p className="text-sm text-gray-600 mb-6">
-                  Are you sure you want to resolve this report from{" "}
+                  Are you sure you want to suspend{" "}
                   <span className="font-semibold text-gray-900">
-                    {user?.username}
+                    {user?.username || user?.email}
                   </span>
                   ?
                 </p>
@@ -261,7 +247,7 @@ export const useUsersColumns = () => {
                     <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-xs text-blue-700 mt-1">
-                        This user will be suspended from using the platform, are
+                        This user will be suspended from using the platform. Are
                         you sure?
                       </p>
                     </div>
@@ -297,15 +283,15 @@ export const useUsersColumns = () => {
               </div>
             </CustomModal>
 
-            {/* view profile */}
+            {/* View Profile Modal */}
             <CustomModal
               isOpen={showViewProfile}
               onClose={() => setShowViewProfile(false)}
               trigger={false}
-              title="Profile"
+              title="User Profile"
               className="md:max-w-[70%]"
             >
-              <ViewProfile />
+              <ViewProfile userId={user.id} />
             </CustomModal>
           </>
         );

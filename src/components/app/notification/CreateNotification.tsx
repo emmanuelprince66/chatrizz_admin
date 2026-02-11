@@ -1,6 +1,5 @@
 // src/components/notifications/CreateNotification.tsx
 
-import { useCreateNotificationMutation } from "@/api/notification/post-notification";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,74 +10,76 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
-
-// Validation schema
-const notificationSchema = z.object({
-  title: z
-    .string()
-    .min(1, "Title is required")
-    .max(200, "Title must be less than 200 characters"),
-  message: z.string().min(1, "Message is required"),
-  type: z
-    .enum(["ALL", "ADMINS", "INDIVIDUAL", "BUSINESS", "ORGANIZATION"])
-    .refine((val) => !!val, "Please select a type"),
-  channel: z
-    .enum(["IN-APP", "PUSH", "EMAIL"])
-    .refine((val) => !!val, "Please select an audience"),
-});
-
-type NotificationFormData = z.infer<typeof notificationSchema>;
+import { useNotifications } from "@/hooks/useNotifications";
+import { Controller } from "react-hook-form";
 
 interface CreateNotificationProps {
   onClose: () => void;
+  notificationId?: string | null;
 }
 
-const CreateNotification = ({ onClose }: CreateNotificationProps) => {
-  const createNotificationMutation = useCreateNotificationMutation();
+const CreateNotification = ({
+  onClose,
+  notificationId,
+}: CreateNotificationProps) => {
+  const {
+    form,
+    onSubmit,
+    isFormLoading: isLoading,
+    isEditMode,
+    isFetchingNotification,
+  } = useNotifications({
+    notificationId,
+    onSuccess: onClose,
+  });
 
   const {
     register,
-    handleSubmit,
     control,
-    formState: { errors, isSubmitting },
-    reset,
-  } = useForm<NotificationFormData>({
-    resolver: zodResolver(notificationSchema),
-    defaultValues: {
-      title: "",
-      message: "",
-      type: undefined,
-      channel: undefined,
-    },
-  });
+    formState: { errors },
+  } = form;
 
-  const onSubmit = async (data: NotificationFormData) => {
-    try {
-      await createNotificationMutation.mutateAsync(data);
+  // Show loading state while fetching notification data
+  if (isFetchingNotification) {
+    return (
+      <div className="space-y-6 p-6">
+        {/* Title Skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" /> {/* Label */}
+          <Skeleton className="h-10 w-full" /> {/* Input */}
+        </div>
 
-      toast.success("Announcement created successfully");
+        {/* Message Skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" /> {/* Label */}
+          <Skeleton className="h-32 w-full" /> {/* Textarea */}
+        </div>
 
-      reset();
-      onClose();
-    } catch (error: any) {
-      toast.error("Failed to create announcement", {
-        description:
-          error?.response?.data?.message ||
-          "Please try again or contact support if the issue persists.",
-      });
-    }
-  };
+        {/* Type Select Skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" /> {/* Label */}
+          <Skeleton className="h-10 w-full" /> {/* Select */}
+        </div>
 
-  const isLoading = isSubmitting || createNotificationMutation.isPending;
+        {/* Channel Select Skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" /> {/* Label */}
+          <Skeleton className="h-10 w-full" /> {/* Select */}
+        </div>
+
+        {/* Button Group Skeleton */}
+        <div className="flex justify-end gap-3 pt-4">
+          <Skeleton className="h-10 w-20" /> {/* Cancel Button */}
+          <Skeleton className="h-10 w-32" /> {/* Submit Button */}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-6">
+    <form onSubmit={onSubmit} className="space-y-6 p-6">
       {/* Title Field */}
       <div className="space-y-2">
         <Label htmlFor="title" className="text-sm font-medium text-gray-700">
@@ -180,26 +181,6 @@ const CreateNotification = ({ onClose }: CreateNotificationProps) => {
         )}
       </div>
 
-      {/* Schedule Field (Optional - for future implementation) */}
-      <div className="space-y-2">
-        <Label htmlFor="schedule" className="text-sm font-medium text-gray-700">
-          Schedule
-        </Label>
-        <Select disabled>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Send immediately" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="immediate">Send immediately</SelectItem>
-            <SelectItem value="scheduled">Schedule for later</SelectItem>
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-gray-500">
-          Scheduling feature coming soon. All announcements will be sent
-          immediately.
-        </p>
-      </div>
-
       {/* Submit Button */}
       <div className="flex justify-end gap-3 pt-4">
         <Button
@@ -217,12 +198,12 @@ const CreateNotification = ({ onClose }: CreateNotificationProps) => {
           className="bg-[#0892D0] hover:bg-[#0892D0]/90 text-white px-6 py-2"
         >
           {isLoading ? (
-            <>
-              <Spinner size="sm" color="text-white" className="mr-2" />
-              Sending...
-            </>
+            <div className="flex items-center">
+              <Skeleton className="h-4 w-4 rounded-full mr-2" />
+              <Skeleton className="h-4 w-24" />
+            </div>
           ) : (
-            "Send Announcement"
+            <>{isEditMode ? "Update Announcement" : "Send Announcement"}</>
           )}
         </Button>
       </div>

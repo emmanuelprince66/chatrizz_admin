@@ -37,7 +37,7 @@ export function CustomModal({
         </DialogTrigger>
       )}
       <DialogContent
-        className={`w-full max-w-[90vw] sm:max-w-[425px] ${className} max-h-[90vh] md:max-h-[95vh]  overflow-y-auto bg-white z-50 border-0 rounded-lg p-6`}
+        className={`w-full max-w-[90vw] sm:max-w-[425px]  ${className} max-h-[90vh] md:max-h-[95vh]  overflow-y-auto bg-white z-50 border-0 rounded-lg p-1`}
       >
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">{title}</DialogTitle>

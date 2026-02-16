@@ -79,9 +79,9 @@ const CreateNotification = ({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6 p-6">
+    <form onSubmit={onSubmit} className="space-y-6 p-1 w-full ">
       {/* Title Field */}
-      <div className="space-y-2">
+      <div className="space-y-2 w-full">
         <Label htmlFor="title" className="text-sm font-medium text-gray-700">
           Title
         </Label>
@@ -93,7 +93,7 @@ const CreateNotification = ({
           className={`w-full ${errors.title ? "border-red-500" : ""}`}
         />
         {errors.title && (
-          <p className="text-sm text-red-600">{errors.title.message}</p>
+          <p className="text-xs text-red-600">{errors.title.message}</p>
         )}
       </div>
 
@@ -111,7 +111,7 @@ const CreateNotification = ({
           className={`w-full resize-none ${errors.message ? "border-red-500" : ""}`}
         />
         {errors.message && (
-          <p className="text-sm text-red-600">{errors.message.message}</p>
+          <p className="text-xs text-red-600">{errors.message.message}</p>
         )}
       </div>
 
@@ -145,7 +145,7 @@ const CreateNotification = ({
           )}
         />
         {errors.type && (
-          <p className="text-sm text-red-600">{errors.type.message}</p>
+          <p className="text-xs text-red-600">{errors.type.message}</p>
         )}
       </div>
 
@@ -177,7 +177,7 @@ const CreateNotification = ({
           )}
         />
         {errors.channel && (
-          <p className="text-sm text-red-600">{errors.channel.message}</p>
+          <p className="text-xs text-red-600">{errors.channel.message}</p>
         )}
       </div>
 

@@ -334,7 +334,7 @@ const ViewProfile = ({ userId }: ViewProfileProps) => {
         <div className="border-t border-gray-200 my-3 md:my-4"></div>
 
         {/* ROW 2: Promotions */}
-        <div className="mb-4 md:mb-6 overflow-hidden w-[320px] md:w-full">
+        <div className="mb-4 md:mb-6 grid grid-cols-1 md:grid-cols-1 overflow-hidden w-md:w-full">
           <div className="flex justify-between items-center mb-2 md:mb-3">
             <h3 className="text-sm md:text-base font-bold">Promotions</h3>
             <a
@@ -345,7 +345,7 @@ const ViewProfile = ({ userId }: ViewProfileProps) => {
             </a>
           </div>
 
-          <div className="overflow-x-auto pb-2 snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0">
+          <div className="overflow-x-auto pb-2 snap-x snap-mandatory  px-4 md:mx-0 md:px-0">
             <div className="flex gap-2 md:gap-3">
               {promotions.map((promo) => (
                 <div key={promo.id} className="flex-shrink-0  snap-start">

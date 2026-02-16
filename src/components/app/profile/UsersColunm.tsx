@@ -289,7 +289,7 @@ export const useUsersColumns = () => {
               onClose={() => setShowViewProfile(false)}
               trigger={false}
               title="User Profile"
-              className="md:max-w-[70%]"
+              className="w-full md:max-w-[70%] "
             >
               <ViewProfile userId={user.id} />
             </CustomModal>

@@ -47,11 +47,11 @@ const NavItem = ({
       onClick={onNavigate}
       className={({ isActive }) =>
         cn(
-          "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200",
+          "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-normal transition-all duration-200",
           isCollapsed && "justify-center px-2",
           isActive
-            ? "bg-[#E6F4FA] text-[#0892D0]"
-            : "text-gray-600 hover:bg-[#F3F9FC] hover:text-[#0892D0]",
+            ? "bg-[#DDF0FA] font-medium text-[#0892D0]"
+            : "text-gray-600 hover:bg-[#E6F4FA] hover:text-[#0892D0] hover:shadow-sm",
         )
       }
     >
@@ -61,7 +61,7 @@ const NavItem = ({
           <span
             aria-hidden="true"
             className={cn(
-              "absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[#0892D0] transition-opacity duration-200",
+              "absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-[#0892D0] transition-opacity duration-200",
               isActive ? "opacity-100" : "opacity-0",
             )}
           />
@@ -69,8 +69,8 @@ const NavItem = ({
             className={cn(
               "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all duration-200",
               isActive
-                ? "bg-white text-[#0892D0] shadow-sm"
-                : "bg-[#EEF0F1] group-hover:scale-105 group-hover:bg-white group-hover:text-[#0892D0] group-hover:shadow-sm",
+                ? "bg-[#0892D0] text-white shadow-sm"
+                : "bg-[#EEF0F1] text-gray-600 group-hover:scale-110 group-hover:bg-[#0892D0] group-hover:text-white group-hover:shadow-md",
             )}
           >
             <item.icon className="h-4 w-4" />
@@ -79,7 +79,7 @@ const NavItem = ({
             <span
               className={cn(
                 "truncate transition-transform duration-200",
-                !isActive && "group-hover:translate-x-0.5",
+                !isActive && "group-hover:translate-x-1",
               )}
             >
               {item.name}
@@ -178,11 +178,11 @@ export function Sidebar() {
               onClick={logout}
               disabled={isLoggingOut}
               className={cn(
-                "group flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-gray-600 transition-all duration-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60",
+                "group flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm font-normal text-gray-600 transition-all duration-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60",
                 isCollapsed && "justify-center px-2",
               )}
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#EEF0F1] transition-all duration-200 group-hover:scale-105 group-hover:bg-white group-hover:shadow-sm">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#EEF0F1] transition-all duration-200 group-hover:scale-110 group-hover:bg-red-500 group-hover:text-white group-hover:shadow-md">
                 {isLoggingOut ? <Spinner size="sm" /> : <LogOut className="h-4 w-4" />}
               </span>
               {!isCollapsed && (isLoggingOut ? "Logging out..." : "Logout")}

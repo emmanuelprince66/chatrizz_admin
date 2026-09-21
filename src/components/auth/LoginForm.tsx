@@ -17,7 +17,7 @@ const LoginForm = () => {
   const { form, onSubmit, isSubmitting } = useLoginHook();
 
   return (
-    <div className="w-screen h-screen relative overflow-hidden bg-[#02141c]">
+    <div className="relative h-dvh w-full overflow-hidden bg-[#02141c]">
       {/* Background Block Puzzle Game Style - Covering the screen with random block/snake shapes */}
       <div className="absolute w-full h-full">
         <img

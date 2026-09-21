@@ -12,7 +12,7 @@ function App() {
   // Wait for the persisted profile to load before rendering any route.
   if (!isHydrated) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
+      <div className="flex h-dvh items-center justify-center bg-background">
         <Spinner color="text-purple-300" size="xxl" />
       </div>
     );

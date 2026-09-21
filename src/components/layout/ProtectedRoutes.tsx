@@ -31,7 +31,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   if (status === "checking") {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
+      <div className="flex h-dvh items-center justify-center bg-background">
         <Spinner color="text-purple-300" size="xxl" />
       </div>
     );

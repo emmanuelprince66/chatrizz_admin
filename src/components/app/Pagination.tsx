@@ -29,7 +29,7 @@ export function Pagination({
   pageSize,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [10, 20, 30, 50, 100],
+  pageSizeOptions = [10, 15, 20, 30, 50, 100],
 }: PaginationProps) {
   const canGoPrevious = currentPage > 1;
   const canGoNext = currentPage < totalPages;

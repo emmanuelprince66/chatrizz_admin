@@ -3,7 +3,7 @@ import { TopNav } from "./Header";
 import { Sidebar } from "./SideBar";
 
 export const Layout = () => (
-  <div className="flex h-screen bg-white">
+  <div className="flex h-dvh overflow-hidden bg-white">
     <Sidebar />
 
     <div className="flex min-w-0 flex-1 flex-col overflow-hidden">

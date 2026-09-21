@@ -130,6 +130,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body {
+    /* Stops the rubber-band scroll revealing blank space behind the app shell on mobile. */
+    overscroll-behavior: none;
+  }
   body {
     @apply bg-background text-foreground;
   }

@@ -2,6 +2,12 @@ import { useFetchOverviewQuery } from "@/api/overview/fetch-overview";
 import moment from "moment";
 import type { DateRange } from "react-day-picker";
 import { useDebounce } from "./useDebounce";
+import { useSearchTerm } from "./useSearchTerm";
+
+const OVERVIEW_PAGE_SIZE = 15;
+
+const formatDate = (date?: Date) =>
+  date ? moment(date).format("YYYY-MM-DD") : undefined;
 
 export const useOverviewHook = ({
   dateRange,
@@ -12,12 +18,7 @@ export const useOverviewHook = ({
   page: number;
   searchInput: string;
 }) => {
-  const debouncedSearchTerm = useDebounce(searchInput, 500);
-
-  const searchTerm =
-    (debouncedSearchTerm?.length || 0) >= 3 || debouncedSearchTerm?.length === 0
-      ? debouncedSearchTerm
-      : null;
+  const searchTerm = useSearchTerm(useDebounce(searchInput, 500));
 
   const {
     data: OverviewData,
@@ -27,17 +28,11 @@ export const useOverviewHook = ({
     params: {
       search: searchTerm,
       page,
-      limit: 15,
-      start_date: dateRange?.from
-        ? moment(dateRange.from).format("YYYY-MM-DD")
-        : undefined,
-      end_date: dateRange?.to
-        ? moment(dateRange.to).format("YYYY-MM-DD")
-        : undefined,
+      limit: OVERVIEW_PAGE_SIZE,
+      start_date: formatDate(dateRange?.from),
+      end_date: formatDate(dateRange?.to),
     },
   });
-
-  console.log("overview", OverviewData);
 
   return { OverviewData, OverviewDataLoading, OverviewDataRefetch };
 };

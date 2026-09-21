@@ -2,22 +2,15 @@ import { ROLES } from "@/lib/contant";
 import { useAuthStore } from "@/store/authStore";
 
 export const usePermissions = () => {
-  const { user } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
 
-  const hasPermission = (permission: string): boolean => {
-    if (!user) return false;
-    return user.permissions.includes(permission);
-  };
+  const hasPermission = (permission: string): boolean =>
+    user?.permissions?.includes(permission) ?? false;
 
-  const hasRole = (role: string): boolean => {
-    if (!user) return false;
-    return user.role === role;
-  };
+  const hasRole = (role: string): boolean => user?.role === role;
 
-  const hasAnyRole = (roles: string[]): boolean => {
-    if (!user) return false;
-    return roles.includes(user.role);
-  };
+  const hasAnyRole = (roles: string[]): boolean =>
+    !!user?.role && roles.includes(user.role);
 
   const isSuperAdmin = (): boolean => {
     return hasRole(ROLES.SUPER_ADMIN);

@@ -1,93 +1,66 @@
-// src/api/reports/fetch-reports.ts
-
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { ListParams, PaginatedResponse, QueryOptions } from "../types";
+import { compactParams } from "../utils";
 
-// Define types based on actual API response
-interface Reporter {
+export interface Reporter {
   username: string;
   id: string;
 }
 
-interface Report {
+export type ReportReason =
+  | "spam"
+  | "harassment"
+  | "hate"
+  | "violence"
+  | "misinformation"
+  | "nudity"
+  | "other";
+
+export type ReportStatus = "PROCESSING" | "RESOLVED";
+
+export interface Report {
   id: string;
-  post: string;
-  reason:
-    | "spam"
-    | "harassment"
-    | "hate"
-    | "violence"
-    | "misinformation"
-    | "nudity"
-    | "other";
+  content_type: string;
+  target_id: string;
+  reason: ReportReason;
   details: string | null;
-  status: "PROCESSING" | "RESOLVED";
+  count: number;
+  status: ReportStatus;
   reporter: Reporter;
   created_at: string;
 }
 
-interface ReportsApiResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: Report[];
-}
+export type ReportsApiResponse = PaginatedResponse<Report>;
 
-interface FetchReportsParams {
-  search?: string | null;
-  status?: string;
-  reason?: string;
-  page?: number;
-  limit?: number;
-}
-
-interface UseFetchReportsQueryOptions {
-  params: FetchReportsParams;
-  enabled?: boolean;
+export interface FetchReportsParams extends ListParams {
+  status?: ReportStatus;
+  reason?: ReportReason;
 }
 
 export const useFetchReportsQuery = ({
   params,
   enabled = true,
-}: UseFetchReportsQueryOptions) => {
-  // Clean params - remove null/undefined/empty values
-  const cleanParams = {
-    ...(params.search && { search: params.search }),
-    ...(params.status && { status: params.status }),
-    ...(params.reason && { reason: params.reason }),
+}: QueryOptions & { params: FetchReportsParams }) => {
+  const queryParams = compactParams({
+    search: params.search,
+    status: params.status,
+    reason: params.reason,
     page: params.page || 1,
     limit: params.limit || 15,
-  };
+  });
 
   return useQuery<ReportsApiResponse, Error>({
-    queryKey: [
-      "reports",
-      cleanParams.page,
-      cleanParams.search,
-      cleanParams.status,
-      cleanParams.reason,
-      cleanParams.limit,
-    ],
-
+    queryKey: queryKeys.reports.list(queryParams),
     queryFn: async () => {
-      const response = await axiosInstance.get<ReportsApiResponse>(
-        "/admin/reports/",
-        {
-          params: cleanParams,
-        },
+      const { data } = await axiosInstance.get<ReportsApiResponse>(
+        ENDPOINTS.reports.list,
+        { params: queryParams },
       );
-      return response.data;
+      return data;
     },
-
     enabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
-
-// Export types for use in components
-export type { FetchReportsParams, Report, Reporter, ReportsApiResponse };

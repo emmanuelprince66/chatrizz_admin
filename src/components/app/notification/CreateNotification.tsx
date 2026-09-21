@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Controller } from "react-hook-form";
@@ -44,7 +45,7 @@ const CreateNotification = ({
   // Show loading state while fetching notification data
   if (isFetchingNotification) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="space-y-6">
         {/* Title Skeleton */}
         <div className="space-y-2">
           <Skeleton className="h-4 w-24" /> {/* Label */}
@@ -79,7 +80,7 @@ const CreateNotification = ({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6 p-1 w-full ">
+    <form onSubmit={onSubmit} className="w-full space-y-6">
       {/* Title Field */}
       <div className="space-y-2 w-full">
         <Label htmlFor="title" className="text-sm font-medium text-gray-700">
@@ -188,23 +189,20 @@ const CreateNotification = ({
           variant="outline"
           onClick={onClose}
           disabled={isLoading}
-          className="px-4 py-2"
         >
           Cancel
         </Button>
         <Button
           type="submit"
           disabled={isLoading}
-          className="bg-[#0892D0] hover:bg-[#0892D0]/90 text-white px-6 py-2"
+          className="px-6"
         >
-          {isLoading ? (
-            <div className="flex items-center">
-              <Skeleton className="h-4 w-4 rounded-full mr-2" />
-              <Skeleton className="h-4 w-24" />
-            </div>
-          ) : (
-            <>{isEditMode ? "Update Announcement" : "Send Announcement"}</>
-          )}
+          {isLoading && <Spinner size="sm" color="text-white" />}
+          {isLoading
+            ? "Saving..."
+            : isEditMode
+              ? "Update Announcement"
+              : "Send Announcement"}
         </Button>
       </div>
     </form>

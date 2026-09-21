@@ -42,7 +42,7 @@ const CreateAdminForm = ({ onClose, adminId }: CreateAdminFormProps) => {
   // Show loading state while fetching admin data
   if (isFetchingAdmin) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="space-y-6">
         {/* Full Name Skeleton */}
         <div className="space-y-2">
           <Skeleton className="h-4 w-24" />
@@ -71,7 +71,7 @@ const CreateAdminForm = ({ onClose, adminId }: CreateAdminFormProps) => {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6 p-6">
+    <form onSubmit={onSubmit} className="space-y-6">
       {/* Full Name Field */}
       <div className="space-y-2">
         <Label
@@ -148,20 +148,16 @@ const CreateAdminForm = ({ onClose, adminId }: CreateAdminFormProps) => {
           variant="outline"
           onClick={onClose}
           disabled={isLoading}
-          className="px-4 py-2"
         >
           Cancel
         </Button>
         <Button
           type="submit"
           disabled={isLoading}
-          className="bg-[#0892D0] hover:bg-[#0892D0]/90 text-white px-6 py-2"
+          className="px-6"
         >
-          {isLoading ? (
-            <Spinner className="w-7 h-7 " color="white" />
-          ) : (
-            <>{isEditMode ? "Update Admin" : "Create Admin"}</>
-          )}
+          {isLoading && <Spinner size="sm" color="text-white" />}
+          {isLoading ? "Saving..." : isEditMode ? "Update Admin" : "Create Admin"}
         </Button>
       </div>
     </form>

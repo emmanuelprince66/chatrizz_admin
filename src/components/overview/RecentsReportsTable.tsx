@@ -1,3 +1,4 @@
+import type { OverviewData } from "@/api/overview/fetch-overview";
 import { CustomTable } from "@/components/app/CustomTable";
 import { useEffect, useState } from "react";
 import { useReportsRecentColumns } from "./RecentReportsColunm";
@@ -7,13 +8,12 @@ const RecentReportsTable = ({
   setPage,
   page,
 }: {
-  response: any;
+  response: OverviewData | undefined;
   loading: boolean;
   setPage: (page: number) => void;
   page: number;
 }) => {
   const columns = useReportsRecentColumns();
-  console.log("response", response);
   // Initialize pageSize with the limit from API response or default to 15
   const [pageSize, setPageSize] = useState<number>(response?.data?.limit || 15);
   const [currentPage, setCurrentPage] = useState<number>(page || 1); // Local page state

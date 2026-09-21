@@ -3,17 +3,29 @@ import {
   BadgeCheck,
   Bell,
   ChartPie,
+  Crown,
+  Flag,
   HandCoins,
   HelpCircle,
   LayoutDashboard,
-  PhoneForwarded,
   Settings,
-  Star,
   Store,
   User,
+  type LucideIcon,
 } from "lucide-react";
 
-export const links = [
+export interface NavLinkItem {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+export interface NavSection {
+  title: string;
+  items: NavLinkItem[];
+}
+
+export const links: NavSection[] = [
   {
     title: "Main Menu",
     items: [
@@ -43,9 +55,14 @@ export const links = [
         icon: BadgeCheck,
       },
       {
+        name: "Subscriptions",
+        href: "/subscriptions",
+        icon: Crown,
+      },
+      {
         name: "Reports",
         href: "/reports",
-        icon: Star,
+        icon: Flag,
       },
       {
         name: "Ads",
@@ -56,11 +73,6 @@ export const links = [
         name: "Payments",
         href: "/payments",
         icon: HandCoins,
-      },
-      {
-        name: "Promotions",
-        href: "/promotions",
-        icon: PhoneForwarded,
       },
       {
         name: "Notifications",

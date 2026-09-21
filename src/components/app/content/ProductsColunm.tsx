@@ -1,15 +1,30 @@
+import { useDeleteProductMutation } from "@/api/content/delete-content";
 import { type ProductContent } from "@/api/content/fetch-content";
-import { CustomModal } from "@/components/app/CustomModal";
+import { ConfirmModal } from "@/components/app/ConfirmModal";
+import {
+  DetailList,
+  DetailRow,
+  DetailsSheet,
+  MediaGrid,
+  MetaChip,
+  NoteBlock,
+  PANEL_DANGER_BUTTON,
+  PANEL_DATE_FORMAT,
+  PanelBadge,
+  PanelSection,
+  PersonRow,
+  RatingStars,
+} from "@/components/app/details-panel";
+import { Button } from "@/components/ui/button";
+import { formatDate } from "@/util/format-date";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useContentHook } from "@/hooks/useContent";
 import { type ColumnDef } from "@tanstack/react-table";
 import {
-  AlertTriangle,
   Eye,
   Image as ImageIcon,
   MapPin,
@@ -19,10 +34,131 @@ import {
   Trash2,
 } from "lucide-react";
 import moment from "moment";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+
+// eslint-disable-next-line react-refresh/only-export-components
+const ProductActions = ({ product }: { product: ProductContent }) => {
+  const [showViewProduct, setShowViewProduct] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const deleteMutation = useDeleteProductMutation();
+
+  const handleDelete = () => {
+    deleteMutation.mutate(product.id, {
+      onSuccess: () => setShowDeleteConfirm(false),
+    });
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer">
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="bg-white border shadow-lg min-w-[160px]"
+        >
+          <DropdownMenuItem
+            onClick={() => setShowViewProduct(true)}
+            className="cursor-pointer px-4 py-2 hover:bg-blue-50 hover:text-blue-600"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            View Details
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setShowDeleteConfirm(true)}
+            className="cursor-pointer px-4 py-2 hover:bg-red-50 hover:text-red-600"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <DetailsSheet
+        open={showViewProduct}
+        onOpenChange={setShowViewProduct}
+        title="Product details"
+        badge={product.is_promoted ? <PanelBadge tone="blue">Promoted</PanelBadge> : undefined}
+        description={`Listed ${formatDate(product.created_at, PANEL_DATE_FORMAT)}`}
+        footer={
+          <Button
+            variant="outline"
+            onClick={() => setShowDeleteConfirm(true)}
+            className={PANEL_DANGER_BUTTON}
+          >
+            <Trash2 />
+            Delete product
+          </Button>
+        }
+      >
+        <PanelSection title="Seller">
+          <PersonRow
+            person={{
+              id: product.user.id,
+              name: product.user.fullname,
+              username: product.user.username,
+              avatar: product.user.profile_picture,
+            }}
+          />
+        </PanelSection>
+
+        <PanelSection title="Product">
+          <div className="flex items-start justify-between gap-3">
+            <p className="font-semibold text-gray-900">{product.name}</p>
+            <p className="shrink-0 text-lg font-semibold text-primary">
+              ₦{Number(product.price).toLocaleString()}
+            </p>
+          </div>
+          <MediaGrid media={product.media_files} />
+          <NoteBlock label="Description">
+            {product.description?.trim() || "No description provided."}
+          </NoteBlock>
+          <div className="flex flex-wrap gap-2">
+            <MetaChip icon={Tag}>{product.category}</MetaChip>
+            {product.location && <MetaChip icon={MapPin}>{product.location}</MetaChip>}
+          </div>
+        </PanelSection>
+
+        <PanelSection title="Ratings">
+          <DetailList>
+            <DetailRow label="Average rating">
+              {product.average_rating ? (
+                <RatingStars rating={Number(product.average_rating.toFixed(1))} />
+              ) : (
+                "No ratings yet"
+              )}
+            </DetailRow>
+            <DetailRow label="Total ratings">
+              {product.ratings_count.toLocaleString()}
+            </DetailRow>
+            <DetailRow label="Product ID">
+              <span className="font-mono text-xs">#{product.id}</span>
+            </DetailRow>
+          </DetailList>
+        </PanelSection>
+      </DetailsSheet>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this product?"
+        notice={{ text: "This action cannot be undone." }}
+        confirmLabel="Delete Product"
+        pendingLabel="Deleting..."
+        confirmIcon={Trash2}
+        isPending={deleteMutation.isPending}
+      />
+    </>
+  );
+};
 
 export const useProductsColumns = () => {
-  const columns: ColumnDef<ProductContent>[] = [
+  return useMemo<ColumnDef<ProductContent>[]>(() => [
     {
       accessorKey: "id",
       header: "Product ID",
@@ -181,176 +317,7 @@ export const useProductsColumns = () => {
     {
       id: "actions",
       header: "Action",
-      cell: ({ row }) => {
-        const product = row.original;
-        const [showViewProduct, setShowViewProduct] = useState(false);
-        const [isDeleting, setIsDeleting] = useState(false);
-        const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-        const handleSuccessDelete = () => {
-          setIsDeleting(false);
-          setShowDeleteConfirm(false);
-        };
-        const { handleDeleteProduct } = useContentHook({});
-
-        const handleDelete = () => {
-          setIsDeleting(true);
-          handleDeleteProduct(product.id, handleSuccessDelete);
-        };
-
-        return (
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer">
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="bg-white border shadow-lg min-w-[160px]"
-              >
-                <DropdownMenuItem
-                  onClick={() => setShowViewProduct(true)}
-                  className="cursor-pointer px-4 py-2 hover:bg-blue-50 hover:text-blue-600"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Details
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="cursor-pointer px-4 py-2 hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* View Modal */}
-            <CustomModal
-              isOpen={showViewProduct}
-              onClose={() => setShowViewProduct(false)}
-              trigger={false}
-              title="Product Details"
-            >
-              <div className="p-6 max-h-[70vh] overflow-y-auto">
-                <div className="flex items-center gap-3 mb-4 pb-4 border-b">
-                  <img
-                    src={product.user.profile_picture}
-                    alt={product.user.username}
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
-                  <div>
-                    <div className="font-medium">{product.user.fullname}</div>
-                    <div className="text-sm text-gray-500">
-                      @{product.user.username}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {product.name}
-                  </h3>
-                  <p className="text-2xl font-bold text-blue-600 mb-4">
-                    ₦{parseFloat(product.price).toLocaleString()}
-                  </p>
-                  <p className="text-sm text-gray-700 mb-4">
-                    {product.description}
-                  </p>
-                </div>
-
-                {product.media_files && product.media_files.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-xs text-gray-500 font-medium mb-2">
-                      Media ({product.media_files.length}):
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {product.media_files.map((media) => (
-                        <img
-                          key={media.id}
-                          src={media.file}
-                          alt="Product media"
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="text-xs text-gray-500">Category</p>
-                    <p className="text-sm font-medium">{product.category}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Location</p>
-                    <p className="text-sm font-medium flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {product.location}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Average Rating</p>
-                    <p className="text-sm font-medium">
-                      {product.average_rating
-                        ? product.average_rating.toFixed(1)
-                        : "No ratings"}{" "}
-                      ⭐
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Total Ratings</p>
-                    <p className="text-sm font-medium">
-                      {product.ratings_count}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CustomModal>
-
-            {/* Delete Modal */}
-            <CustomModal
-              isOpen={showDeleteConfirm}
-              onClose={() => setShowDeleteConfirm(false)}
-              trigger={false}
-              title="Confirm Delete"
-            >
-              <div className="p-6">
-                <p className="text-sm text-gray-600 mb-6">
-                  Are you sure you want to delete this product?
-                </p>
-                <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
-                    <p className="text-xs text-red-700">
-                      This action cannot be undone.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                  >
-                    {isDeleting ? "Deleting..." : "Delete Product"}
-                  </button>
-                </div>
-              </div>
-            </CustomModal>
-          </>
-        );
-      },
+      cell: ({ row }) => <ProductActions product={row.original} />,
     },
-  ];
-
-  return columns;
+  ], []);
 };

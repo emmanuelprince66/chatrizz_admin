@@ -1,6 +1,3 @@
-// components/DateRangePicker.tsx
-"use client";
-
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { type DateRange } from "react-day-picker";
@@ -11,6 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
 import { Calendar } from "../ui/calendar";
 
@@ -25,6 +23,9 @@ export function DatePickerWithRange({
   date,
   onDateChange,
 }: DatePickerWithRangeProps) {
+  // Two months side by side don't fit on a phone screen.
+  const isWideScreen = useMediaQuery("(min-width: 640px)");
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -33,7 +34,7 @@ export function DatePickerWithRange({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-full justify-start text-left font-normal bg-white hover:bg-gray-50 border-gray-200",
+              "h-10 w-full justify-start rounded-full border-gray-200 bg-white text-left font-normal hover:bg-gray-50",
               !date && "text-muted-foreground"
             )}
           >
@@ -62,7 +63,7 @@ export function DatePickerWithRange({
             defaultMonth={date?.from}
             selected={date}
             onSelect={onDateChange}
-            numberOfMonths={2}
+            numberOfMonths={isWideScreen ? 2 : 1}
             className="bg-white rounded-md"
             modifiersStyles={{
               selected: {

@@ -1,8 +1,6 @@
-// src/pages/AdminManagementPage.tsx
-
-"use client";
-
+import { BackLink } from "@/components/app/BackLink";
 import { CustomModal } from "@/components/app/CustomModal";
+import { PageHeader } from "@/components/app/PageHeader";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { useAdmins } from "@/hooks/useAdmin";
@@ -17,16 +15,9 @@ const AdminManagementPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [editingAdminId, setEditingAdminId] = useState<string | null>(null);
-  // const [deletingAdminId, setDeletingAdminId] = useState<string | null>(null);
 
   // Use the admins hook
-  const {
-    AdminsData,
-    AdminsDataLoading,
-    // handleDelete,
-    handleSuspend,
-    // isDeleting,
-  } = useAdmins({
+  const { AdminsData, AdminsDataLoading, handleSuspend } = useAdmins({
     searchInput: searchValue,
     page,
     pageSize,
@@ -38,18 +29,6 @@ const AdminManagementPage = () => {
     setIsCreateModalOpen(true);
   };
 
-  // Handle delete confirmation
-  // const handleDeleteClick = (id: string) => {
-  //   setDeletingAdminId(id);
-  // };
-
-  // const confirmDelete = async () => {
-  //   if (deletingAdminId) {
-  //     await handleDelete(deletingAdminId);
-  //     setDeletingAdminId(null);
-  //   }
-  // };
-
   // Handle modal close
   const handleModalClose = () => {
     setIsCreateModalOpen(false);
@@ -57,97 +36,59 @@ const AdminManagementPage = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-[500] text-gray-900 mb-2">
-            Admin Management
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Manage administrators and their permissions
-          </p>
-        </div>
+    <div className="space-y-6">
+      <BackLink to="/settings" label="Settings" />
 
-        {/* Search and Create Button */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6 items-start sm:items-center justify-between">
-          <SearchInput
-            placeholder="Search admins..."
-            value={searchValue}
-            onValueChange={setSearchValue}
-            className="w-full sm:w-80"
-          />
+      <PageHeader
+        title="Admin Management"
+        description="Manage administrators and their permissions."
+        actions={
+          <>
+            <SearchInput
+              placeholder="Search admins..."
+              value={searchValue}
+              onValueChange={setSearchValue}
+              className="w-full sm:w-72"
+            />
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="h-10 w-full rounded-full px-5 sm:w-auto"
+            >
+              <Plus />
+              Create Admin
+            </Button>
+          </>
+        }
+      />
 
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-[#0892D0] hover:bg-[#0892D0]/90 text-white whitespace-nowrap"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Admin
-          </Button>
-        </div>
+      <AdminTable
+        response={AdminsData}
+        loading={AdminsDataLoading}
+        setPage={setPage}
+        page={page}
+        setPageSize={setPageSize}
+        pageSize={pageSize}
+        onEdit={handleEdit}
+        onSuspend={handleSuspend}
+      />
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <AdminTable
-            response={AdminsData}
-            loading={AdminsDataLoading}
-            setPage={setPage}
-            page={page}
-            setPageSize={setPageSize}
-            pageSize={pageSize}
-            onEdit={handleEdit}
-            onDelete={() => {}}
-            onSuspend={handleSuspend}
-          />
-        </div>
-
-        {/* Create/Edit Admin Modal */}
-        <CustomModal
-          isOpen={isCreateModalOpen}
+      <CustomModal
+        isOpen={isCreateModalOpen}
+        onClose={handleModalClose}
+        title={
+          editingAdminId ? "Edit Administrator" : "Create New Administrator"
+        }
+        description={
+          editingAdminId
+            ? "Update the administrator details"
+            : "Add a new administrator to your system"
+        }
+      >
+        <CreateAdminForm
           onClose={handleModalClose}
-          title={
-            editingAdminId ? "Edit Administrator" : "Create New Administrator"
-          }
-          description={
-            editingAdminId
-              ? "Update the administrator details"
-              : "Add a new administrator to your system"
-          }
-          trigger={false}
-        >
-          <CreateAdminForm
-            onClose={handleModalClose}
-            adminId={editingAdminId}
-          />
-        </CustomModal>
-
-        {/* Delete Confirmation Dialog */}
-        {/* <AlertDialog
-          open={!!deletingAdminId}
-          onOpenChange={() => setDeletingAdminId(null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the admin
-                account and remove their data from our servers.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={confirmDelete}
-                disabled={isDeleting}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {isDeleting ? "Deleting..." : "Delete"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog> */}
-      </div>
+          adminId={editingAdminId}
+        />
+      </CustomModal>
     </div>
   );
 };

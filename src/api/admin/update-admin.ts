@@ -1,44 +1,26 @@
-// src/api/admin/update-admin.ts
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { Admin } from "./fetch-admin";
+import type { CreateAdminPayload } from "./post-admin";
 
-interface UpdateAdminPayload {
-  full_name: string;
-  email: string;
-  role: "Administrator" | "Sub-admin";
-}
-
-interface UpdateAdminResponse {
-  id: string;
-  full_name: string;
-  email: string;
-  role: string;
-  admin_role: string;
-  is_active: boolean;
-  created_at: string;
-}
+export type UpdateAdminPayload = CreateAdminPayload;
+export type UpdateAdminResponse = Admin;
 
 export const useUpdateAdminMutation = (id: string) => {
   const queryClient = useQueryClient();
 
   return useMutation<UpdateAdminResponse, Error, UpdateAdminPayload>({
-    mutationFn: async (payload: UpdateAdminPayload) => {
-      const response = await axiosInstance.patch<UpdateAdminResponse>(
-        `/admin/team/${id}/`,
+    mutationFn: async (payload) => {
+      const { data } = await axiosInstance.patch<UpdateAdminResponse>(
+        ENDPOINTS.admins.detail(id),
         payload,
       );
-      return response.data;
+      return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admins"] });
-      queryClient.invalidateQueries({ queryKey: ["admin", id] });
-    },
-    onError: (error) => {
-      console.error("Failed to update admin:", error);
-    },
+    // Covers both the list and this admin's detail query.
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins.all }),
   });
 };
-
-// Export types separately
-export type { UpdateAdminPayload, UpdateAdminResponse };

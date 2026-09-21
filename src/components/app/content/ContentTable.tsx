@@ -1,4 +1,9 @@
-import type { ContentApiResponse } from "@/api/content/fetch-content";
+import type {
+  ContentApiResponse,
+  PostContent,
+  ProductContent,
+  ReviewContent,
+} from "@/api/content/fetch-content";
 import { CustomTable } from "@/components/app/CustomTable";
 import { useMemo } from "react";
 import { usePostsColumns } from "./PostsColunms";
@@ -28,20 +33,6 @@ const ContentTable = ({
   const productsColumns = useProductsColumns();
   const reviewsColumns = useReviewsColumns();
 
-  // Select the appropriate columns based on content type
-  const columns = useMemo(() => {
-    switch (contentType) {
-      case "Posts":
-        return postsColumns;
-      case "Products":
-        return productsColumns;
-      case "Reviews":
-        return reviewsColumns;
-      default:
-        return postsColumns;
-    }
-  }, [contentType, postsColumns, productsColumns, reviewsColumns]);
-
   // Memoize pagination values to prevent unnecessary recalculations
   const paginationData = useMemo(() => {
     return {
@@ -64,21 +55,45 @@ const ContentTable = ({
     setPage(1); // Reset to first page when changing page size
   };
 
-  return (
-    <CustomTable
-      loading={loading}
-      noDataText={`No ${contentType.toLowerCase()} found. Try adjusting your search criteria or filter.`}
-      columns={columns}
-      data={paginationData.results}
-      pagination={{
-        currentPage: paginationData.currentPage,
-        totalPages: paginationData.totalPages,
-        pageSize: paginationData.pageSize,
-        onPageChange: handlePageChange,
-        onPageSizeChange: handlePageSizeChange,
-      }}
-    />
-  );
+  const tableProps = {
+    loading,
+    noDataText: `No ${contentType.toLowerCase()} found. Try adjusting your search criteria or filter.`,
+    pagination: {
+      currentPage: paginationData.currentPage,
+      totalPages: paginationData.totalPages,
+      pageSize: paginationData.pageSize,
+      onPageChange: handlePageChange,
+      onPageSizeChange: handlePageSizeChange,
+    },
+  };
+
+  // The list is requested with `type` matching `contentType`, so every row is that kind.
+  switch (contentType) {
+    case "Products":
+      return (
+        <CustomTable
+          {...tableProps}
+          columns={productsColumns}
+          data={paginationData.results as ProductContent[]}
+        />
+      );
+    case "Reviews":
+      return (
+        <CustomTable
+          {...tableProps}
+          columns={reviewsColumns}
+          data={paginationData.results as ReviewContent[]}
+        />
+      );
+    default:
+      return (
+        <CustomTable
+          {...tableProps}
+          columns={postsColumns}
+          data={paginationData.results as PostContent[]}
+        />
+      );
+  }
 };
 
 export default ContentTable;

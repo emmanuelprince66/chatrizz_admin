@@ -1,23 +1,15 @@
-// src/api/notifications/post-notification.ts
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { Notification } from "./fetch-notification";
 
-interface CreateNotificationPayload {
-  title: string;
-  message: string;
-  type: "ALL" | "ADMINS" | "INDIVIDUAL" | "BUSINESS" | "ORGANIZATION";
-  channel: "IN-APP" | "PUSH" | "EMAIL";
-}
+export type CreateNotificationPayload = Pick<
+  Notification,
+  "title" | "message" | "type" | "channel"
+>;
 
-interface CreateNotificationResponse {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  channel: string;
-  created_at: string;
-}
+export type CreateNotificationResponse = Notification;
 
 export const useCreateNotificationMutation = () => {
   const queryClient = useQueryClient();
@@ -27,24 +19,14 @@ export const useCreateNotificationMutation = () => {
     Error,
     CreateNotificationPayload
   >({
-    mutationFn: async (payload: CreateNotificationPayload) => {
-      const response = await axiosInstance.post<CreateNotificationResponse>(
-        "/admin/broadcast/",
+    mutationFn: async (payload) => {
+      const { data } = await axiosInstance.post<CreateNotificationResponse>(
+        ENDPOINTS.notifications.list,
         payload,
       );
-      return response.data;
+      return data;
     },
-
-    onSuccess: () => {
-      // Invalidate and refetch all notifications queries
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    },
-
-    onError: (error) => {
-      console.error("Failed to create notification:", error);
-    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all }),
   });
 };
-
-// Export types
-export type { CreateNotificationPayload, CreateNotificationResponse };

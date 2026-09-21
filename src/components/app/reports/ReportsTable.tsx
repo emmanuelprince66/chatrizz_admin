@@ -22,20 +22,15 @@ const ReportsTable = ({
 }: ReportsTableProps) => {
   const columns = useReportsRecentColumns();
 
-  // Calculate pagination from count
-  const paginationData = useMemo(() => {
-    const totalItems = response?.count || 0;
-    const currentPageSize = pageSize;
-    const totalPages = Math.ceil(totalItems / currentPageSize);
-
-    return {
+  const paginationData = useMemo(
+    () => ({
       currentPage: page,
-      totalPages: totalPages || 1,
-      totalItems,
-      pageSize: currentPageSize,
+      totalPages: response?.pages || 1,
+      pageSize: response?.limit || pageSize,
       results: response?.results || [],
-    };
-  }, [response, page, pageSize]);
+    }),
+    [response, page, pageSize],
+  );
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);

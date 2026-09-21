@@ -1,17 +1,7 @@
-export const BaseUrl = "https://www.api.chatrizz.co/api/v1/";
-// export const BaseUrl = "https://api.sync360.africa/api/v1/";
+const DEFAULT_API_BASE_URL = "https://api.chatrizz.co/api/v1/";
 
-export const API_ENDPOINTS = {
-  // Auth endpoints
-  LOGIN: `${BaseUrl}login`,
-  REGISTER: `${BaseUrl}register`,
-  LOGOUT: `${BaseUrl}logout`,
-  REFRESH_TOKEN: `${BaseUrl}refresh-token`,
-  ME: `${BaseUrl}me`,
+/** Override per environment with `VITE_API_BASE_URL` (see `.env.example`). */
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_API_BASE_URL;
 
-  // User endpoints
-  USERS: `${BaseUrl}users`,
-  USER_BY_ID: (id: string) => `${BaseUrl}users/${id}`,
-
-  // Add more endpoints as needed
-} as const;
+export const API_TIMEOUT_MS = 30_000;

@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 
 import {
@@ -161,7 +159,7 @@ export function CustomTable<TData>({
     const isFirst = index === 0;
     const isLast = index === totalCells - 1;
 
-    return `px-6 py-4 text-sm text-gray-700 border-0 ${
+    return `px-4 py-3 md:px-6 md:py-4 text-sm text-gray-700 border-0 ${
       isFirst ? "rounded-l-[40px]" : ""
     } ${isLast ? "rounded-r-[40px]" : ""}`;
   };
@@ -174,15 +172,16 @@ export function CustomTable<TData>({
     const isFirst = index === 0;
     const isLast = index === totalHeaders - 1;
 
-    let borderClass = "border-t-2 border-b-2 border-cyan-500";
+    let borderClass =
+      "border-y-2 border-cyan-500 first:border-l-2 last:border-r-2";
     if (isFirst) {
-      borderClass += " border-l-2 rounded-tl-[40px]";
+      borderClass += " rounded-l-full";
     }
     if (isLast) {
-      borderClass += " border-r-2 rounded-tr-[40px]";
+      borderClass += " rounded-r-full";
     }
 
-    return `px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider bg-gray-50/80 ${borderClass} ${
+    return `px-4 py-3 md:px-6 whitespace-nowrap text-left text-xs font-semibold text-gray-600 uppercase tracking-wider bg-gray-50/80 ${borderClass} ${
       canSort
         ? "cursor-pointer select-none hover:bg-gray-100 transition-colors"
         : ""
@@ -190,26 +189,15 @@ export function CustomTable<TData>({
   };
 
   return (
-    <div className="bg-white w-full">
+    <div className="w-full">
       {tableHeader && (
-        <div className="px-6 py-4 border-b border-gray-200 bg-white">
+        <div className="border-b border-gray-100 py-4">
           {tableHeader}
         </div>
       )}
 
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        table {
-          border-collapse: separate !important;
-          border-spacing: 0 0.75rem !important;
-        }
-      `,
-        }}
-      />
-
-      <div className="overflow-x-auto px-4">
-        <Table>
+      <div>
+        <Table className="border-separate border-spacing-y-3">
           <TableHeader className="[&_tr]:border-0">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
@@ -363,7 +351,7 @@ export function CustomTable<TData>({
       </div>
 
       {pagination && !loading && table.getRowModel().rows?.length > 0 && (
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50/30">
+        <div className="border-t border-gray-100 pt-4">
           <Pagination
             currentPage={pagination.currentPage}
             totalPages={pagination.totalPages}

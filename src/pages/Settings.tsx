@@ -1,83 +1,57 @@
-import { CustomCard } from "@/components/app/CustomCard";
-import { ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { PageHeader } from "@/components/app/PageHeader";
+import { ChevronRight, KeyRound, ShieldCheck, type LucideIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 
-const Settings = () => {
-  const navigate = useNavigate();
+interface SettingsLink {
+  title: string;
+  description: string;
+  href: string;
+  icon: LucideIcon;
+}
 
-  const handleAdminManagement = () => {
-    navigate("/settings/admin-management");
-  };
+const SETTINGS_LINKS: SettingsLink[] = [
+  {
+    title: "Admin Management",
+    description: "Manage admin users and their permissions.",
+    href: "/settings/admin-management",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Reset Password",
+    description: "Change your current password for better security.",
+    href: "/settings/reset-password",
+    icon: KeyRound,
+  },
+];
 
-  const handleResetPassword = () => {
-    navigate("/settings/reset-password");
-  };
+const Settings = () => (
+  <div className="space-y-6">
+    <PageHeader
+      title="Settings & Permissions"
+      description="Manage your account settings and administrative permissions."
+    />
 
-  return (
-    <div className="min-h-screen  p-4 md:p-6 lg:p-8">
-      <div className=" mx-auto">
-        {/* Heading */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-[500] text-gray-900 mb-2">
-            Settings & Permissions
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Manage your account settings and administrative permissions
-          </p>
-        </div>
-
-        {/* Cards Container */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
-          {/* Admin Management Card */}
-          <div onClick={handleAdminManagement} className="group cursor-pointer">
-            <CustomCard
-              title="Admin Management"
-              description="Administrators"
-              className="transition-all duration-300 hover:shadow-lg hover:scale-105 p-4 hover:border-[#0892D0] border-2 border-transparent"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm text-gray-500 mt-1">
-                    Manage admin users and their permissions
-                  </p>
-                </div>
-                <div className="ml-4">
-                  <div className="w-10 h-10 bg-[#0892D0] bg-opacity-10 rounded-full flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
-                    <ArrowRight className="w-5 h-5 text-white" />
-                  </div>
-                </div>
-              </div>
-            </CustomCard>
-          </div>
-
-          {/* Reset Password Card */}
-          <div onClick={handleResetPassword} className="group cursor-pointer">
-            <CustomCard
-              title="Reset Password"
-              description="Update your password"
-              className="transition-all duration-300 hover:shadow-lg p-4 hover:scale-105 hover:border-[#0892D0] border-2 border-transparent"
-              bgColor="bg-white"
-              headerClassName="pb-2"
-              contentClassName="pt-2"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="text-sm text-gray-500 mt-1">
-                    Change your current password for better security
-                  </p>
-                </div>
-                <div className="ml-4">
-                  <div className="w-10 h-10 bg-[#0892D0] bg-opacity-10 rounded-full flex items-center justify-center group-hover:bg-opacity-20 transition-all duration-300">
-                    <ArrowRight className="w-5 h-5 text-white" />
-                  </div>
-                </div>
-              </div>
-            </CustomCard>
-          </div>
-        </div>
-      </div>
+    <div className="grid max-w-4xl grid-cols-1 gap-4 md:grid-cols-2">
+      {SETTINGS_LINKS.map(({ title, description, href, icon: Icon }) => (
+        <Link
+          key={href}
+          to={href}
+          className="group flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E6F4FA] text-primary">
+            <Icon className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold text-gray-900">{title}</span>
+            <span className="mt-0.5 block text-sm text-gray-500">
+              {description}
+            </span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-gray-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+        </Link>
+      ))}
     </div>
-  );
-};
+  </div>
+);
 
 export default Settings;

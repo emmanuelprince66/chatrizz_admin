@@ -1,77 +1,44 @@
-// src/api/admin/fetch-admins.ts
-
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { ListParams, PaginatedResponse, QueryOptions } from "../types";
+import { compactParams } from "../utils";
 
-// Define types based on API response
-interface Admin {
+export type AdminRole = "Administrator" | "Sub-admin";
+
+export interface Admin {
   id: string;
   full_name: string;
   email: string;
-  role: "Administrator" | "Sub-admin";
+  role: AdminRole;
   admin_role: string;
   is_active: boolean;
   created_at: string;
 }
 
-interface AdminsApiResponse {
-  links: {
-    next: string | null;
-    previous: string | null;
-  };
-  total: number;
-  limit: number;
-  pages: number;
-  results: Admin[];
-}
-
-interface FetchAdminsParams {
-  search?: string | null;
-  page?: number;
-  limit?: number;
-}
-
-interface UseFetchAdminsQueryOptions {
-  params: FetchAdminsParams;
-  enabled?: boolean;
-}
+export type AdminsApiResponse = PaginatedResponse<Admin>;
+export type FetchAdminsParams = ListParams;
 
 export const useFetchAdminsQuery = ({
   params,
   enabled = true,
-}: UseFetchAdminsQueryOptions) => {
-  // Clean params - remove null/undefined/empty values
-  const cleanParams = {
-    ...(params.search && { search: params.search }),
+}: QueryOptions & { params: FetchAdminsParams }) => {
+  const queryParams = compactParams({
+    search: params.search,
     page: params.page || 1,
     limit: params.limit || 10,
-  };
+  });
 
   return useQuery<AdminsApiResponse, Error>({
-    queryKey: [
-      "admins",
-      cleanParams.page,
-      cleanParams.search,
-      cleanParams.limit,
-    ],
+    queryKey: queryKeys.admins.list(queryParams),
     queryFn: async () => {
-      const response = await axiosInstance.get<AdminsApiResponse>(
-        "/admin/team/",
-        {
-          params: cleanParams,
-        },
+      const { data } = await axiosInstance.get<AdminsApiResponse>(
+        ENDPOINTS.admins.list,
+        { params: queryParams },
       );
-      return response.data;
+      return data;
     },
     enabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
-
-// Export types for use in components
-export type { Admin, AdminsApiResponse, FetchAdminsParams };

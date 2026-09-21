@@ -1,7 +1,9 @@
-// src/api/content/fetch-content.ts
-
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { ListParams, PaginatedResponse, QueryOptions } from "../types";
+import { compactParams } from "../utils";
 
 // Common User interface
 interface User {
@@ -92,79 +94,35 @@ interface ReviewContent {
 // Union type for all content types
 type Content = PostContent | ProductContent | ReviewContent;
 
-interface PaginationLinks {
-  next: string | null;
-  previous: string | null;
-}
+export type ContentApiResponse = PaginatedResponse<Content>;
 
-interface ContentApiResponse {
-  links: PaginationLinks;
-  total: number;
-  limit: number;
-  pages: number;
-  results: Content[];
-}
-
-interface FetchContentParams {
-  search?: string | null;
-  page?: number;
-  limit?: number;
-  type?: string | null; // POST, PRODUCT, REVIEW
-}
-
-interface UseFetchContentQueryOptions {
-  params: FetchContentParams;
-  enabled?: boolean;
+export interface FetchContentParams extends ListParams {
+  /** POST, PRODUCT or REVIEW (case-insensitive). */
+  type?: string | null;
 }
 
 export const useFetchContentQuery = ({
   params,
   enabled = true,
-}: UseFetchContentQueryOptions) => {
-  // Clean params - remove null/undefined values and capitalize type
-  const cleanParams = {
-    ...(params.search && { search: params.search }),
-    ...(params.type && { type: params.type.toUpperCase() }), // Capitalize type
+}: QueryOptions & { params: FetchContentParams }) => {
+  const queryParams = compactParams({
+    search: params.search,
+    type: params.type?.toUpperCase(),
     page: params.page || 1,
     limit: params.limit || 15,
-  };
+  });
 
   return useQuery<ContentApiResponse, Error>({
-    queryKey: [
-      "content",
-      cleanParams.page,
-      cleanParams.search,
-      cleanParams.limit,
-      cleanParams.type,
-    ],
-
+    queryKey: queryKeys.content.list(queryParams),
     queryFn: async () => {
-      const response = await axiosInstance.get<ContentApiResponse>(
-        "/admin/content/",
-        {
-          params: cleanParams,
-        },
+      const { data } = await axiosInstance.get<ContentApiResponse>(
+        ENDPOINTS.content.list,
+        { params: queryParams },
       );
-      return response.data;
+      return data;
     },
-
     enabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
 
-// Export types for use in components
-export type {
-  Content,
-  ContentApiResponse,
-  FetchContentParams,
-  MediaFile,
-  PostContent,
-  ProductContent,
-  ReviewContent,
-};
+export type { Content, MediaFile, PostContent, ProductContent, ReviewContent };

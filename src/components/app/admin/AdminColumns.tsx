@@ -51,7 +51,7 @@ export const useAdminColumns = ({
           const configs: Record<string, { className: string; label: string }> =
             {
               "Super Admin": {
-                className: "bg-[#0892D0] text-white border-[#0892D0]",
+                className: "bg-primary text-primary-foreground border-primary",
                 label: "Super Admin",
               },
               Administrator: {

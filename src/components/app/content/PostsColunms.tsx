@@ -1,28 +1,166 @@
-import { CustomModal } from "@/components/app/CustomModal";
+import { useDeletePostMutation } from "@/api/content/delete-content";
+import type { PostContent } from "@/api/content/fetch-content";
+import { ConfirmModal } from "@/components/app/ConfirmModal";
+import {
+  DetailList,
+  DetailRow,
+  DetailsSheet,
+  MediaGrid,
+  NoteBlock,
+  PANEL_DANGER_BUTTON,
+  PANEL_DATE_FORMAT,
+  PanelBadge,
+  PanelSection,
+  PersonRow,
+  StatGrid,
+  StatTile,
+} from "@/components/app/details-panel";
+import { Button } from "@/components/ui/button";
+import { formatDate } from "@/util/format-date";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useContentHook } from "@/hooks/useContent";
 import { type ColumnDef } from "@tanstack/react-table";
 import {
-  AlertTriangle,
+  Bookmark,
   Eye,
   Heart,
   Image as ImageIcon,
-  Loader2,
   MessageSquare,
   MoreHorizontal,
+  Repeat2,
   Share2,
   Trash2,
 } from "lucide-react";
 import moment from "moment";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+
+// eslint-disable-next-line react-refresh/only-export-components
+const PostActions = ({ post }: { post: PostContent }) => {
+  const [showViewPost, setShowViewPost] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const deleteMutation = useDeletePostMutation();
+
+  const handleDelete = () => {
+    deleteMutation.mutate(post.id, {
+      onSuccess: () => setShowDeleteConfirm(false),
+    });
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer">
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="bg-white border shadow-lg min-w-[160px]"
+        >
+          <DropdownMenuItem
+            onClick={() => setShowViewPost(true)}
+            className="cursor-pointer px-4 py-2 hover:bg-blue-50 hover:text-blue-600"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            View Details
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setShowDeleteConfirm(true)}
+            className="cursor-pointer px-4 py-2 hover:bg-red-50 hover:text-red-600"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <DetailsSheet
+        open={showViewPost}
+        onOpenChange={setShowViewPost}
+        title="Post details"
+        badge={post.is_promoted ? <PanelBadge tone="blue">Promoted</PanelBadge> : undefined}
+        description={`Posted ${formatDate(post.created_at, PANEL_DATE_FORMAT)}`}
+        footer={
+          <Button
+            variant="outline"
+            onClick={() => setShowDeleteConfirm(true)}
+            className={PANEL_DANGER_BUTTON}
+          >
+            <Trash2 />
+            Delete post
+          </Button>
+        }
+      >
+        <PanelSection title="Author">
+          <PersonRow
+            person={{
+              id: post.user.id,
+              name: post.user.fullname,
+              username: post.user.username,
+              avatar: post.user.profile_picture,
+            }}
+          />
+        </PanelSection>
+
+        <PanelSection title="Content">
+          <NoteBlock label="Post text">
+            {post.body?.trim() || "No text in this post."}
+          </NoteBlock>
+          <MediaGrid media={post.media} />
+          {post.quoted_post_detail && (
+            <NoteBlock
+              label={`Quoting @${post.quoted_post_detail.user.username ?? "unknown"}`}
+            >
+              {post.quoted_post_detail.body}
+            </NoteBlock>
+          )}
+        </PanelSection>
+
+        <PanelSection title="Engagement">
+          <StatGrid>
+            <StatTile icon={Heart} label="Likes" value={post.like_count} />
+            <StatTile icon={MessageSquare} label="Comments" value={post.comments_count} />
+            <StatTile icon={Share2} label="Shares" value={post.share_count} />
+            <StatTile icon={Repeat2} label="Quotes" value={post.quotes_count} />
+            <StatTile icon={Bookmark} label="Saves" value={post.bookmarks_count} />
+          </StatGrid>
+        </PanelSection>
+
+        <PanelSection title="Details">
+          <DetailList>
+            <DetailRow label="Post ID">
+              <span className="font-mono text-xs">{post.id}</span>
+            </DetailRow>
+            <DetailRow label="Last updated">
+              {formatDate(post.updated_at, PANEL_DATE_FORMAT)}
+            </DetailRow>
+          </DetailList>
+        </PanelSection>
+      </DetailsSheet>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this post?"
+        notice={{ text: "This action cannot be undone." }}
+        confirmLabel="Delete Post"
+        pendingLabel="Deleting..."
+        confirmIcon={Trash2}
+        isPending={deleteMutation.isPending}
+      />
+    </>
+  );
+};
 
 export const usePostsColumns = () => {
-  const columns: ColumnDef<any>[] = [
+  return useMemo<ColumnDef<PostContent>[]>(() => [
     {
       accessorKey: "id",
       header: "Post ID",
@@ -129,9 +267,7 @@ export const usePostsColumns = () => {
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => {
-        const post = row.original;
-        console.log("post", post);
+      cell: () => {
         const isActive = true; // You can add logic for this
 
         return (
@@ -150,175 +286,7 @@ export const usePostsColumns = () => {
     {
       id: "actions",
       header: "Action",
-      cell: ({ row }) => {
-        const post = row.original;
-        const [showViewPost, setShowViewPost] = useState(false);
-        const [isDeletingPost, setIsDeletingPost] = useState(false);
-        const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-        const { handleDeletePost, isDeletePostPending } = useContentHook({});
-
-        const handleSuccessDelete = () => {
-          setIsDeletingPost(false);
-          setShowDeleteConfirm(false);
-        };
-
-        const handleDelete = () => {
-          setIsDeletingPost(true);
-          handleDeletePost(post.id, handleSuccessDelete);
-        };
-
-        return (
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer">
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="bg-white border shadow-lg min-w-[160px]"
-              >
-                <DropdownMenuItem
-                  onClick={() => setShowViewPost(true)}
-                  className="cursor-pointer px-4 py-2 hover:bg-blue-50 hover:text-blue-600"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Details
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="cursor-pointer px-4 py-2 hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* View Modal */}
-            <CustomModal
-              isOpen={showViewPost}
-              onClose={() => setShowViewPost(false)}
-              trigger={false}
-              title="Post Details"
-            >
-              <div className="p-6 max-h-[70vh] overflow-y-auto">
-                <div className="flex items-center gap-3 mb-4 pb-4 border-b">
-                  <img
-                    src={post.user.profile_picture}
-                    alt={post.user.username}
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
-                  <div>
-                    <div className="font-medium">{post.user.fullname}</div>
-                    <div className="text-sm text-gray-500">
-                      @{post.user.username}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <p className="text-xs text-gray-500 font-medium mb-2">
-                    Post Content:
-                  </p>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                    {post.body}
-                  </p>
-                </div>
-
-                {post.media && post.media.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-xs text-gray-500 font-medium mb-2">
-                      Media ({post.media.length}):
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {post.media.map((media: any) => (
-                        <img
-                          key={media.id}
-                          src={media.file}
-                          alt="Post media"
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="text-xs text-gray-500">Likes</p>
-                    <p className="text-lg font-semibold">{post.like_count}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Comments</p>
-                    <p className="text-lg font-semibold">
-                      {post.comments_count}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Shares</p>
-                    <p className="text-lg font-semibold">{post.share_count}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Bookmarks</p>
-                    <p className="text-lg font-semibold">
-                      {post.bookmarks_count}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CustomModal>
-
-            {/* Delete Modal */}
-            <CustomModal
-              isOpen={showDeleteConfirm}
-              onClose={() => setShowDeleteConfirm(false)}
-              trigger={false}
-              title="Confirm Delete"
-            >
-              <div className="p-6">
-                <p className="text-sm text-gray-600 mb-6">
-                  Are you sure you want to delete this post?
-                </p>
-                <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
-                    <p className="text-xs text-red-700">
-                      This action cannot be undone.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
-                    disabled={isDeletePostPending}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={isDeletePostPending}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    {isDeletePostPending ||
-                      (isDeletingPost && (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ))}
-                    {isDeletePostPending || isDeletingPost
-                      ? "Deleting..."
-                      : "Delete Post"}
-                  </button>
-                </div>
-              </div>
-            </CustomModal>
-          </>
-        );
-      },
+      cell: ({ row }) => <PostActions post={row.original} />,
     },
-  ];
-
-  return columns;
+  ], []);
 };

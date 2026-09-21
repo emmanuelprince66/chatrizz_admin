@@ -1,3 +1,4 @@
+import type { OverviewTrend } from "@/api/overview/fetch-overview";
 import {
   CategoryScale,
   Chart,
@@ -12,6 +13,7 @@ import {
 import { TrendingUp } from "lucide-react";
 import { useMemo, useRef } from "react";
 import { Line } from "react-chartjs-2";
+import type { TooltipItem } from "chart.js";
 
 // Register the required Chart.js components
 Chart.register(
@@ -25,12 +27,7 @@ Chart.register(
   Filler,
 );
 
-interface TrendData {
-  posts?: Array<{ day: string; count: number }>;
-  comments?: Array<{ day: string; count: number }>;
-  likes?: Array<{ day: string; count: number }>;
-  shares?: Array<{ day: string; count: number }>;
-}
+type TrendData = OverviewTrend;
 
 interface EngagementChartProps {
   trendData?: TrendData;
@@ -237,11 +234,11 @@ const EngagementChart = ({ trendData }: EngagementChartProps) => {
         cornerRadius: 8,
         displayColors: true,
         callbacks: {
-          title: (context: any) => {
+          title: (context: TooltipItem<"line">[]) => {
             return `${context[0].label}`;
           },
-          label: (context: any) => {
-            return `${context.dataset.label}: ${context.raw.toLocaleString()}`;
+          label: (context: TooltipItem<"line">) => {
+            return `${context.dataset.label}: ${Number(context.raw).toLocaleString()}`;
           },
         },
       },
@@ -272,7 +269,7 @@ const EngagementChart = ({ trendData }: EngagementChartProps) => {
           font: {
             size: 11,
           },
-          callback: function (value: any) {
+          callback: function (value: string | number) {
             return value.toLocaleString();
           },
         },

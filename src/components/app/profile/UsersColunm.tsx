@@ -1,39 +1,101 @@
+import type { User } from "@/api/profile/fetch-user";
 import { useSuspendUserMutation } from "@/api/profile/suspend-users";
-import { CustomModal } from "@/components/app/CustomModal";
+import { getApiErrorMessage } from "@/api/utils";
+import { ConfirmModal } from "@/components/app/ConfirmModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Spinner } from "@/components/ui/spinner";
 import { type ColumnDef } from "@tanstack/react-table";
-import {
-  CheckCircle2,
-  Info,
-  MoreHorizontal,
-  UserCheck,
-  UserX,
-} from "lucide-react";
+import { MoreHorizontal, UserCheck, UserX } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import ViewProfile from "./ViewProfile";
 
-// Define the UserInfo type based on the API response
-interface UserInfo {
-  id: string;
-  full_name: string | null;
-  email: string;
-  username: string | null;
-  location: string | null;
-  followers: number;
-  created_at: string;
-  last_seen: string;
-  is_active: boolean;
-}
+// eslint-disable-next-line react-refresh/only-export-components
+const UserActions = ({ user }: { user: User }) => {
+  const navigate = useNavigate();
+  const [showSuspendedModal, setShowSuspendedModal] = useState(false);
+  const suspendUserMutation = useSuspendUserMutation();
+  const isSuspended = user?.is_active === false;
+  const isSuspending = suspendUserMutation.isPending;
+
+  const handleSuspend = async () => {
+    try {
+      await suspendUserMutation.mutateAsync({ id: user.id });
+      toast.success("User suspended successfully");
+      setShowSuspendedModal(false);
+    } catch (error) {
+      toast.error("Failed to suspend user", {
+        description: getApiErrorMessage(error),
+      });
+    }
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer transition-colors">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="bg-white border border-gray-200 shadow-lg min-w-[160px]"
+        >
+          <DropdownMenuItem
+            onClick={() => setShowSuspendedModal(true)}
+            disabled={isSuspended || isSuspending}
+            className={`cursor-pointer px-4 py-2 transition-colors flex items-center`}
+          >
+            {isSuspended ? <>User Suspended</> : <>Suspend User</>}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => navigate(`/users/${user.id}`)}
+            className={`cursor-pointer px-4 py-2 transition-colors flex items-center`}
+          >
+            View Profile
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className={`cursor-pointer px-4 py-2 text-red-500 transition-colors flex items-center`}
+          >
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <ConfirmModal
+        isOpen={showSuspendedModal}
+        onClose={() => setShowSuspendedModal(false)}
+        onConfirm={handleSuspend}
+        title="Confirm Suspend User"
+        message={
+          <>
+            Are you sure you want to suspend{" "}
+            <span className="font-semibold text-gray-900">
+              {user.username || user.email}
+            </span>
+            ?
+          </>
+        }
+        notice={{
+          text: "This user will be suspended from using the platform.",
+        }}
+        tone="primary"
+        confirmLabel="Suspend user"
+        pendingLabel="Suspending..."
+        isPending={isSuspending}
+      />
+    </>
+  );
+};
 
 export const useUsersColumns = () => {
-  const columns: ColumnDef<UserInfo>[] = [
+  const columns: ColumnDef<User>[] = [
     {
       accessorKey: "full_name",
       header: "Full Name",
@@ -171,131 +233,7 @@ export const useUsersColumns = () => {
     {
       id: "actions",
       header: "Actions",
-      cell: ({ row }) => {
-        const user = row.original;
-        const [showSuspendedModal, setShowSuspendedModal] = useState(false);
-        const [showViewProfile, setShowViewProfile] = useState(false);
-        const suspendUserMutation = useSuspendUserMutation();
-        const isSuspended = user?.is_active === false;
-        const isSuspending = suspendUserMutation.isPending;
-
-        const handleSuspend = async () => {
-          try {
-            await suspendUserMutation.mutateAsync({ id: user.id });
-            toast.success("User suspended successfully");
-            setShowSuspendedModal(false);
-          } catch (error) {
-            toast.error("Failed to suspend user", {
-              description:
-                "Please try again or contact support if the issue persists.",
-            });
-          }
-        };
-
-        return (
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer transition-colors">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="bg-white border border-gray-200 shadow-lg min-w-[160px]"
-              >
-                <DropdownMenuItem
-                  onClick={() => setShowSuspendedModal(true)}
-                  disabled={isSuspended || isSuspending}
-                  className={`cursor-pointer px-4 py-2 transition-colors flex items-center`}
-                >
-                  {isSuspended ? <>User Suspended</> : <>Suspend User</>}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setShowViewProfile(true)}
-                  className={`cursor-pointer px-4 py-2 transition-colors flex items-center`}
-                >
-                  View Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className={`cursor-pointer px-4 py-2 text-red-500 transition-colors flex items-center`}
-                >
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Suspend Modal */}
-            <CustomModal
-              isOpen={showSuspendedModal}
-              onClose={() => setShowSuspendedModal(false)}
-              trigger={false}
-              title="Confirm Suspend User"
-            >
-              <div className="p-6">
-                <p className="text-sm text-gray-600 mb-6">
-                  Are you sure you want to suspend{" "}
-                  <span className="font-semibold text-gray-900">
-                    {user?.username || user?.email}
-                  </span>
-                  ?
-                </p>
-
-                <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-start gap-2">
-                    <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs text-blue-700 mt-1">
-                        This user will be suspended from using the platform. Are
-                        you sure?
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setShowSuspendedModal(false)}
-                    disabled={isSuspending}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 cursor-pointer rounded-lg hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSuspend}
-                    disabled={isSuspending}
-                    className="px-4 py-2 bg-blue-600 cursor-pointer text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    {isSuspending ? (
-                      <>
-                        <Spinner size={"sm"} color="text-white" />
-                        Suspending...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="h-4 w-4" />
-                        Suspend user
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </CustomModal>
-
-            {/* View Profile Modal */}
-            <CustomModal
-              isOpen={showViewProfile}
-              onClose={() => setShowViewProfile(false)}
-              trigger={false}
-              title="User Profile"
-              className="w-full md:max-w-[70%] "
-            >
-              <ViewProfile userId={user.id} />
-            </CustomModal>
-          </>
-        );
-      },
+      cell: ({ row }) => <UserActions user={row.original} />,
     },
   ];
 

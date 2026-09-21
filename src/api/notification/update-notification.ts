@@ -1,23 +1,12 @@
-// src/api/notifications/update-notification.ts
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { Notification } from "./fetch-notification";
+import type { CreateNotificationPayload } from "./post-notification";
 
-interface UpdateNotificationPayload {
-  title: string;
-  message: string;
-  type: "ALL" | "ADMINS" | "INDIVIDUAL" | "BUSINESS" | "ORGANIZATION";
-  channel: "IN-APP" | "PUSH" | "EMAIL";
-}
-
-interface UpdateNotificationResponse {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  channel: string;
-  created_at: string;
-}
+export type UpdateNotificationPayload = CreateNotificationPayload;
+export type UpdateNotificationResponse = Notification;
 
 export const useUpdateNotificationMutation = (id: string) => {
   const queryClient = useQueryClient();
@@ -27,22 +16,15 @@ export const useUpdateNotificationMutation = (id: string) => {
     Error,
     UpdateNotificationPayload
   >({
-    mutationFn: async (payload: UpdateNotificationPayload) => {
-      const response = await axiosInstance.patch<UpdateNotificationResponse>(
-        `/admin/single_broadcast/${id}`,
+    mutationFn: async (payload) => {
+      const { data } = await axiosInstance.patch<UpdateNotificationResponse>(
+        ENDPOINTS.notifications.detail(id),
         payload,
       );
-      return response.data;
+      return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["notification", id] });
-    },
-    onError: (error) => {
-      console.error("Failed to update notification:", error);
-    },
+    // Covers both the list and this notification's detail query.
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all }),
   });
 };
-
-// Export types separately
-export type { UpdateNotificationPayload, UpdateNotificationResponse };

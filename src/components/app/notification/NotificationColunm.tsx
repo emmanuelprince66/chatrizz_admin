@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 interface UseNotificationColumnsProps {
-  onEdit: any;
+  onEdit: (id: string) => void;
   onDelete?: (id: string) => void;
 }
 

@@ -1,20 +1,16 @@
-// src/api/admin/suspend-admin.ts
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
 
 export const useSuspendAdminMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation<void, Error, string>({
-    mutationFn: async (id: string) => {
-      await axiosInstance.get(`/admin/suspend/${id}/`);
+    mutationFn: async (id) => {
+      await axiosInstance.post(ENDPOINTS.admins.suspend(id));
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admins"] });
-    },
-    onError: (error) => {
-      console.error("Failed to suspend admin:", error);
-    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins.all }),
   });
 };

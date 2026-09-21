@@ -1,16 +1,16 @@
-// src/hooks/useAdmins.ts
-
 import { useFetchAdminsQuery } from "@/api/admin/fetch-admin";
 import { useFetchSingleAdminQuery } from "@/api/admin/get-admin";
 import { useCreateAdminMutation } from "@/api/admin/post-admin";
 import { useSuspendAdminMutation } from "@/api/admin/suspend-admin";
 import { useUpdateAdminMutation } from "@/api/admin/update-admin";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo } from "react";
+import { getApiErrorMessage } from "@/api/utils";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useDebounce } from "./useDebounce";
+import { useSearchTerm } from "./useSearchTerm";
 
 // Validation schema
 const adminSchema = z.object({
@@ -46,15 +46,7 @@ export const useAdmins = ({
   onSuccess,
   enableForm = false,
 }: UseAdminsProps = {}) => {
-  const debouncedSearchTerm = useDebounce(searchInput, 500);
-
-  // Only search if input is 3+ characters or empty (to show all)
-  const searchTerm = useMemo(() => {
-    const trimmedSearch = debouncedSearchTerm?.trim() || "";
-    return trimmedSearch.length >= 3 || trimmedSearch.length === 0
-      ? trimmedSearch
-      : null;
-  }, [debouncedSearchTerm]);
+  const searchTerm = useSearchTerm(useDebounce(searchInput, 500));
 
   // List admins query
   const {
@@ -83,7 +75,6 @@ export const useAdmins = ({
   // Mutations
   const createMutation = useCreateAdminMutation();
   const updateMutation = useUpdateAdminMutation(adminId || "");
-  //   const deleteMutation = useDeleteAdminMutation();
   const suspendMutation = useSuspendAdminMutation();
 
   // Form setup
@@ -122,41 +113,22 @@ export const useAdmins = ({
 
       reset();
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error) {
       const action = isEditMode ? "update" : "create";
       toast.error(`Failed to ${action} admin`, {
-        description:
-          error?.response?.data?.message ||
-          error?.response?.data?.email?.[0] ||
-          "Please try again or contact support if the issue persists.",
+        description: getApiErrorMessage(error),
       });
     }
   };
-
-  // Delete handler
-  //   const handleDelete = async (id: string) => {
-  //     try {
-  //       //   await deleteMutation.mutateAsync(id);
-  //       toast.success("Admin deleted successfully");
-  //     } catch (error: any) {
-  //       toast.error("Failed to delete admin", {
-  //         description:
-  //           error?.response?.data?.message ||
-  //           "Please try again or contact support if the issue persists.",
-  //       });
-  //     }
-  //   };
 
   // Suspend handler
   const handleSuspend = async (id: string) => {
     try {
       await suspendMutation.mutateAsync(id);
       toast.success("Admin status updated successfully");
-    } catch (error: any) {
+    } catch (error) {
       toast.error("Failed to suspend admin", {
-        description:
-          error?.response?.data?.message ||
-          "Please try again or contact support if the issue persists.",
+        description: getApiErrorMessage(error),
       });
     }
   };
@@ -182,9 +154,7 @@ export const useAdmins = ({
     isFetchingAdmin,
 
     // Actions
-    // handleDelete,
     handleSuspend,
-    // isDeleting: deleteMutation.isPending,
     isSuspending: suspendMutation.isPending,
   };
 };

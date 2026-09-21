@@ -1,6 +1,6 @@
-"use client";
-
+import { PageHeader } from "@/components/app/PageHeader";
 import ReportsTable from "@/components/app/reports/ReportsTable";
+import { ResultsCount } from "@/components/app/ResultsCount";
 import { SearchInput } from "@/components/app/SearchInput";
 import {
   Select,
@@ -9,14 +9,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { ReportReason, ReportStatus } from "@/api/reports/fetch-reports";
 import { useReportsHook } from "@/hooks/useReportsHook";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const Reports: React.FC = () => {
+type ReasonFilter = ReportReason | "all";
+type StatusFilter = ReportStatus | "all";
+
+const Reports = () => {
   const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
-  const [reason, setReason] = useState("all");
-  const [status, setStatus] = useState("all");
+  const [reason, setReason] = useState<ReasonFilter>("all");
+  const [status, setStatus] = useState<StatusFilter>("all");
   const [pageSize, setPageSize] = useState(15);
 
   const { ReportsData, ReportsDataLoading } = useReportsHook({
@@ -34,7 +38,7 @@ const Reports: React.FC = () => {
 
   // Calculate display info
   const displayInfo = useMemo(() => {
-    const totalItems = ReportsData?.count || 0;
+    const totalItems = ReportsData?.total || 0;
     const resultsCount = ReportsData?.results?.length || 0;
 
     return {
@@ -44,96 +48,68 @@ const Reports: React.FC = () => {
   }, [ReportsData]);
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col w-full items-start sm:items-center gap-4 sm:flex-row sm:justify-between">
-        <div className="flex flex-col items-start">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-cabinet font-[500] tracking-tight">
-            Reports Management
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base max-w-md">
-            Review and manage user-reported content violations.
-          </p>
-        </div>
-
-        {/* Desktop Filters */}
-        <div className="hidden md:flex gap-3 items-center">
-          <SearchInput
-            placeholder="Search reports..."
-            value={searchInput}
-            onValueChange={setSearchInput}
-            className="w-64 md:w-80"
-          />
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Status Filter */}
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-full sm:w-[200px] border-gray-200">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="PROCESSING">Processing</SelectItem>
-              <SelectItem value="RESOLVED">Resolved</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Reason Filter */}
-          <Select value={reason} onValueChange={setReason}>
-            <SelectTrigger className="w-full sm:w-[200px] border-gray-200">
-              <SelectValue placeholder="All Reasons" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Reasons</SelectItem>
-              <SelectItem value="spam">Spam</SelectItem>
-              <SelectItem value="harassment">Harassment</SelectItem>
-              <SelectItem value="hate">Hate Speech</SelectItem>
-              <SelectItem value="violence">Violence</SelectItem>
-              <SelectItem value="misinformation">Misinformation</SelectItem>
-              <SelectItem value="nudity">Nudity</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Mobile Search */}
-          <div className="md:hidden w-full">
+    <div className="space-y-6">
+      <PageHeader
+        title="Reports Management"
+        description="Review and manage user-reported content violations."
+        actions={
+          <>
             <SearchInput
               placeholder="Search reports..."
               value={searchInput}
               onValueChange={setSearchInput}
-              className="w-full"
+              className="w-full sm:w-64"
             />
-          </div>
-        </div>
+            <Select
+              value={status}
+              onValueChange={(value) => setStatus(value as StatusFilter)}
+            >
+              <SelectTrigger className="h-10 min-w-0 flex-1 rounded-full border-gray-200 bg-white sm:w-40 sm:flex-none">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="PROCESSING">Processing</SelectItem>
+                <SelectItem value="RESOLVED">Resolved</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={reason}
+              onValueChange={(value) => setReason(value as ReasonFilter)}
+            >
+              <SelectTrigger className="h-10 min-w-0 flex-1 rounded-full border-gray-200 bg-white sm:w-44 sm:flex-none">
+                <SelectValue placeholder="All Reasons" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Reasons</SelectItem>
+                <SelectItem value="spam">Spam</SelectItem>
+                <SelectItem value="harassment">Harassment</SelectItem>
+                <SelectItem value="hate">Hate Speech</SelectItem>
+                <SelectItem value="violence">Violence</SelectItem>
+                <SelectItem value="misinformation">Misinformation</SelectItem>
+                <SelectItem value="nudity">Nudity</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
+        }
+      />
 
-        {/* Results count */}
-        <div className="text-sm text-muted-foreground font-medium">
-          {ReportsDataLoading ? (
-            <span className="flex items-center gap-2">
-              <span className="h-4 w-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
-              Loading reports...
-            </span>
-          ) : (
-            `Showing ${displayInfo.resultsCount} of ${displayInfo.totalItems} reports`
-          )}
-        </div>
-      </div>
+      <ResultsCount
+        loading={ReportsDataLoading}
+        shown={displayInfo.resultsCount}
+        total={displayInfo.totalItems}
+        label="reports"
+      />
 
-      {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-        <ReportsTable
-          response={ReportsData}
-          loading={ReportsDataLoading}
-          setPage={setPage}
-          page={page}
-          setPageSize={setPageSize}
-          pageSize={pageSize}
-        />
-      </div>
+      <ReportsTable
+        response={ReportsData}
+        loading={ReportsDataLoading}
+        setPage={setPage}
+        page={page}
+        setPageSize={setPageSize}
+        pageSize={pageSize}
+      />
     </div>
   );
 };

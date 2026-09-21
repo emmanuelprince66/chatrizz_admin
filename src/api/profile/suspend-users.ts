@@ -1,34 +1,27 @@
-// src/api/reports/resolve-report.ts
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { MessageResponse } from "../types";
 
-interface SuspendUsersProp {
+export interface SuspendUserPayload {
   id: string;
 }
 
-interface SuspendUserResponse {
-  message?: string;
-}
+export type SuspendUserResponse = MessageResponse;
 
 export const useSuspendUserMutation = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<SuspendUserResponse, Error, SuspendUsersProp>({
-    mutationFn: async ({ id }: SuspendUsersProp) => {
-      const response = await axiosInstance.get<SuspendUserResponse>(
-        `/admin/suspend/${id}/`,
+  return useMutation<SuspendUserResponse, Error, SuspendUserPayload>({
+    mutationFn: async ({ id }) => {
+      const { data } = await axiosInstance.post<SuspendUserResponse>(
+        ENDPOINTS.users.suspend(id),
       );
-      return response.data;
+      return data;
     },
-
-    onSuccess: () => {
-      // Invalidate and refetch all reports queries
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
-
-    onError: (error) => {
-      console.error("Failed to resolve report:", error);
-    },
+    // Refreshes the users list and this user's profile.
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all }),
   });
 };

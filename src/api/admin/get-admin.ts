@@ -1,34 +1,22 @@
-// src/api/admin/get-admin.ts
-
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
-
-interface Admin {
-  id: string;
-  full_name: string;
-  email: string;
-  role: "Administrator" | "Sub-admin";
-  admin_role: string;
-  is_active: boolean;
-  created_at: string;
-}
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { QueryOptions } from "../types";
+import type { Admin } from "./fetch-admin";
 
 export const useFetchSingleAdminQuery = (
   id: string | null,
-  options?: { enabled?: boolean },
-) => {
-  return useQuery<Admin, Error>({
-    queryKey: ["admin", id],
+  options?: QueryOptions,
+) =>
+  useQuery<Admin, Error>({
+    queryKey: queryKeys.admins.detail(id),
     queryFn: async () => {
-      if (!id) throw new Error("No ID provided");
-
-      const response = await axiosInstance.get<Admin>(`/admin/team/${id}/`);
-      return response.data;
+      if (!id) throw new Error("Admin id is required");
+      const { data } = await axiosInstance.get<Admin>(ENDPOINTS.admins.detail(id));
+      return data;
     },
     enabled: !!id && (options?.enabled ?? true),
-    staleTime: 5 * 60 * 1000,
-    retry: 2,
   });
-};
 
 export type { Admin };

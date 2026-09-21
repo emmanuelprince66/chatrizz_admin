@@ -1,13 +1,13 @@
-// src/api/reports/resolve-report.ts
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
 
-interface ResolveReportParams {
+export interface ResolveReportParams {
   id: string;
 }
 
-interface ResolveReportResponse {
+export interface ResolveReportResponse {
   id: string;
   status: string;
   message?: string;
@@ -17,20 +17,16 @@ export const useResolveReportMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation<ResolveReportResponse, Error, ResolveReportParams>({
-    mutationFn: async ({ id }: ResolveReportParams) => {
-      const response = await axiosInstance.get<ResolveReportResponse>(
-        `/admin/resolve_report/${id}/`,
+    mutationFn: async ({ id }) => {
+      const { data } = await axiosInstance.get<ResolveReportResponse>(
+        ENDPOINTS.reports.resolve(id),
       );
-      return response.data;
+      return data;
     },
-
     onSuccess: () => {
-      // Invalidate and refetch all reports queries
-      queryClient.invalidateQueries({ queryKey: ["reports"] });
-    },
-
-    onError: (error) => {
-      console.error("Failed to resolve report:", error);
+      queryClient.invalidateQueries({ queryKey: queryKeys.reports.all });
+      // The overview dashboard lists recent reports too.
+      queryClient.invalidateQueries({ queryKey: queryKeys.overview.all });
     },
   });
 };

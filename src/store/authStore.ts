@@ -1,15 +1,13 @@
-import type { User } from "@/types/auth.types";
+import type { AuthUser } from "@/types/auth.types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface AuthStore {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
+  user: AuthUser | null;
   isHydrated: boolean;
-  setAuth: (user: User, token: string) => void;
-  logout: () => void;
-  updateUser: (user: Partial<User>) => void;
+  setUser: (user: AuthUser) => void;
+  updateUser: (user: Partial<AuthUser>) => void;
+  clearUser: () => void;
   setHydrated: () => void;
 }
 
@@ -17,28 +15,22 @@ export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
       user: null,
-      token: null,
-      isAuthenticated: false,
       isHydrated: false,
-      setAuth: (user, token) => {
-        localStorage.setItem("auth_token", token);
-        set({ user, token, isAuthenticated: true });
-      },
-      logout: () => {
-        localStorage.removeItem("auth_token");
-        set({ user: null, token: null, isAuthenticated: false });
-      },
+      setUser: (user) => set({ user }),
       updateUser: (userData) =>
         set((state) => ({
           user: state.user ? { ...state.user, ...userData } : null,
         })),
+      clearUser: () => set({ user: null }),
       setHydrated: () => set({ isHydrated: true }),
     }),
     {
       name: "auth-storage",
+      // Only the (non-secret) profile is persisted; tokens stay in cookies.
+      partialize: (state) => ({ user: state.user }),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated();
       },
-    }
-  )
+    },
+  ),
 );

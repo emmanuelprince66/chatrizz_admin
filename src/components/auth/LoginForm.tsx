@@ -119,48 +119,6 @@ const LoginForm = () => {
           {/* Additional Links */}
         </div>
 
-        {/* Verify OTP Modal - Uncomment and implement when needed */}
-        {/* <CustomModal
-          isOpen={showOtpModal}
-          onClose={closeOtpPhoneModal}
-          trigger={true}
-          title="Verify OTP"
-          description="Enter the 6-digit code sent to your email"
-        >
-          <div className="grid gap-4 py-4">
-            <OtpInput
-              value={otp}
-              onChange={(value) => setOtp(value)}
-              length={6}
-            />
-
-            <div className="flex w-full flex-col items-start mt-4">
-              <p className="text-sm text-gray-600 mb-2">Enter Phone Number</p>
-              <PhoneInput
-                international
-                defaultCountry="NG"
-                value={verifyOtpPhone}
-                onChange={(value) => setVerifyOtpPhone(value)}
-                placeholder="Enter phone number"
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
-              />
-              <p className="text-[10px] text-yellow-600 mt-1 mb-2">
-                Please enter the phone number you used in signing up.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-2 mt-4">
-              <Button className="w-full h-[48px]">
-                {false ? <Spinner /> : "Verify OTP"}
-              </Button>
-
-              <Button variant="outline" className="w-full h-[48px]">
-                Resend OTP
-              </Button>
-            </div>
-          </div>
-        </CustomModal> */}
-        {/* verify otp modal end */}
       </div>
     </div>
   );

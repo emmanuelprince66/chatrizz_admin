@@ -1,6 +1,5 @@
-import lTwo from "@/assets/login_one.png";
-import lOne from "@/assets/sidebar/l-1.png";
-import { Button } from "@/components/ui/button";
+import logoMark from "@/assets/login_one.png";
+import logoFull from "@/assets/sidebar/l-1.png";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Tooltip,
@@ -8,246 +7,172 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { links } from "@/lib/contant";
+import { useLogout } from "@/hooks/useLogout";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { links, type NavLinkItem } from "@/lib/contant";
 import { cn } from "@/lib/utils";
-import Cookies from "js-cookie";
+import { useUIStore } from "@/store/uiStore";
+import { ChevronLeft, LogOut } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, NavLink } from "react-router-dom";
 
-import { LogOut } from "lucide-react";
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+/** Shows a tooltip with the label only when the sidebar is collapsed. */
+const CollapsedTooltip = ({
+  label,
+  isCollapsed,
+  children,
+}: {
+  label: string;
+  isCollapsed: boolean;
+  children: ReactNode;
+}) => (
+  <Tooltip delayDuration={0}>
+    <TooltipTrigger asChild>{children}</TooltipTrigger>
+    {isCollapsed && <TooltipContent side="right">{label}</TooltipContent>}
+  </Tooltip>
+);
+
+const NavItem = ({
+  item,
+  isCollapsed,
+  onNavigate,
+}: {
+  item: NavLinkItem;
+  isCollapsed: boolean;
+  onNavigate: () => void;
+}) => (
+  <CollapsedTooltip label={item.name} isCollapsed={isCollapsed}>
+    <NavLink
+      to={item.href}
+      onClick={onNavigate}
+      className={({ isActive }) =>
+        cn(
+          "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+          isCollapsed && "justify-center px-2",
+          isActive
+            ? "bg-[#E6F4FA] text-[#0892D0]"
+            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+        )
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <span
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors",
+              isActive
+                ? "bg-white text-[#0892D0] shadow-sm"
+                : "bg-[#EEF0F1] group-hover:bg-white",
+            )}
+          >
+            <item.icon className="h-4 w-4" />
+          </span>
+          {!isCollapsed && <span className="truncate">{item.name}</span>}
+        </>
+      )}
+    </NavLink>
+  </CollapsedTooltip>
+);
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isPending, setIsPending] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const pathname = location.pathname;
+  const isMobileNavOpen = useUIStore((state) => state.isMobileNavOpen);
+  const closeMobileNav = useUIStore((state) => state.closeMobileNav);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const { logout, isLoggingOut } = useLogout();
 
-  const handleLogOut = async () => {
-    setIsPending(true);
-    try {
-      Cookies.remove("access_token");
-      Cookies.remove("refresh_token");
-
-      // Clear all localStorage items
-      localStorage.removeItem("user_data");
-      localStorage.removeItem("auth-storage");
-
-      // Clear any other auth-related items you might have
-      localStorage.removeItem("auth_token");
-
-      toast.success("Login successful!");
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  type NavItemType = {
-    name: string;
-    href: string;
-    icon: React.ComponentType<{ className?: string }>;
-  };
-
-  const NavItem = ({
-    item,
-    // isBottom = false,
-  }: {
-    item: NavItemType;
-    isBottom?: boolean;
-  }) => (
-    <Tooltip delayDuration={0}>
-      <TooltipTrigger asChild>
-        <div
-          className={cn(
-            "rounded-md px-3 py-2 mb-2 transition-colors cursor-pointer",
-            pathname === item.href
-              ? "text-[#00D0F5] bg-[#EEF0F1]"
-              : "text-muted-foreground hover:text-[#00D0F5] hover:bg-[#EEF0F1]/50",
-          )}
-        >
-          <Link
-            to={item.href}
-            className="flex items-center text-sm font-medium"
-            onClick={() => {
-              if (isMobileOpen) setIsMobileOpen(false);
-            }}
-          >
-            <div
-              className={cn(
-                "p-2 rounded-full bg-[#EEF0F1]",
-                pathname === item.href && "text-[#00D0F5]",
-                !isCollapsed && "mr-3",
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-            </div>
-            {!isCollapsed && <span>{item.name}</span>}
-          </Link>
-        </div>
-      </TooltipTrigger>
-      {isCollapsed && (
-        <TooltipContent side="right" className="flex items-center gap-4">
-          {item.name}
-        </TooltipContent>
-      )}
-    </Tooltip>
-  );
+  // Reset the mobile drawer when the viewport grows, so its state never leaks into the desktop layout.
+  useEffect(() => {
+    if (isDesktop) closeMobileNav();
+  }, [isDesktop, closeMobileNav]);
 
   return (
     <TooltipProvider>
-      <>
-        <button
-          className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-background rounded-md shadow-md"
-          onClick={() => setIsMobileOpen(!isMobileOpen)}
-          aria-label="Toggle sidebar"
-        >
-          <svg
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
+      {isMobileNavOpen && (
         <div
-          className={cn(
-            "fixed inset-y-0 z-20 flex flex-col border border-gray-100 bg-background transition-all duration-300 ease-in-out lg:static lg:z-0",
-            isCollapsed ? "w-[72px]" : "w-72",
-            isMobileOpen
-              ? "translate-x-0"
-              : "-translate-x-full lg:translate-x-0",
-          )}
-        >
-          <div className="border-b border-gray-100 relative min-h-[64px]">
-            <div
+          aria-hidden="true"
+          onClick={closeMobileNav}
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+        />
+      )}
+
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col border-r border-gray-100 bg-white transition-all duration-300 ease-in-out lg:relative lg:z-40 lg:translate-x-0 lg:shadow-none",
+          isCollapsed ? "w-[76px]" : "w-72",
+          isMobileNavOpen ? "translate-x-0 shadow-xl" : "-translate-x-full",
+        )}
+      >
+        <div className="relative flex h-16 shrink-0 items-center border-b border-gray-100 px-4">
+          <Link
+            to="/"
+            onClick={closeMobileNav}
+            className={cn("flex items-center", isCollapsed && "w-full justify-center")}
+          >
+            {isCollapsed ? (
+              <img src={logoMark} alt="Chatrizz" width={36} height={32} className="object-contain" />
+            ) : (
+              <img src={logoFull} alt="Chatrizz" width={140} height={36} className="object-contain" />
+            )}
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setIsCollapsed((collapsed) => !collapsed)}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={cn(
+              "absolute -right-3 top-1/2 z-10 h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-colors hover:bg-primary hover:text-white",
+              // When the mobile drawer is closed the button would poke out past the screen edge.
+              isMobileNavOpen ? "flex" : "hidden lg:flex",
+            )}
+          >
+            <ChevronLeft
+              className={cn("h-4 w-4 transition-transform", isCollapsed && "rotate-180")}
+            />
+          </button>
+        </div>
+
+        <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-5">
+          {links.map((section) => (
+            <div key={section.title}>
+              {!isCollapsed && (
+                <h2 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  {section.title}
+                </h2>
+              )}
+              <div className="space-y-1">
+                {section.items.map((item) => (
+                  <NavItem
+                    key={item.href}
+                    item={item}
+                    isCollapsed={isCollapsed}
+                    onNavigate={closeMobileNav}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        <div className="border-t border-gray-100 p-3">
+          <CollapsedTooltip label="Logout" isCollapsed={isCollapsed}>
+            <button
+              type="button"
+              onClick={logout}
+              disabled={isLoggingOut}
               className={cn(
-                "flex items-center gap-2 px-4 py-2",
+                "flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60",
                 isCollapsed && "justify-center px-2",
               )}
             >
-              {!isCollapsed && (
-                <Link to="/" className="flex items-center font-semibold">
-                  <img
-                    src={lOne}
-                    alt="Logo"
-                    width={150}
-                    height={40}
-                    className="object-contain"
-                  />
-                </Link>
-              )}
-              {isCollapsed && (
-                <Link
-                  to="/"
-                  className="flex items-center font-semibold w-full justify-center"
-                >
-                  <img
-                    src={lTwo}
-                    alt="Logo-2"
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                  />
-                </Link>
-              )}
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className={cn(
-              "absolute hover:bg-[#00D0F5] hover:text-white top-11 right-0 h-8 w-8 z-10",
-              isCollapsed && "top-11",
-            )}
-            onClick={() => setIsCollapsed(!isCollapsed)}
-          >
-            <svg
-              className={cn(
-                "h-4 w-4 transition-transform",
-                isCollapsed && "rotate-180",
-              )}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            <span className="sr-only">
-              {isCollapsed ? "Expand" : "Collapse"} Sidebar
-            </span>
-          </Button>
-          <div className="flex-1 overflow-auto border border-gray-100 py-4">
-            {links.map((section) => (
-              <div key={section.title} className="px-2 py-4">
-                {!isCollapsed && (
-                  <h2 className="px-3 mb-3 text-xs font-semibold text-muted-foreground">
-                    {section.title}
-                  </h2>
-                )}
-                <nav className="space-y-1">
-                  {section.items.map((item) => (
-                    <NavItem key={item.name} item={item} />
-                  ))}
-                </nav>
-              </div>
-            ))}
-          </div>
-
-          {/* Logout Button at Bottom */}
-          <div className="border-t border-gray-100 p-3 mt-auto">
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={handleLogOut}
-                  disabled={isPending}
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors rounded-md",
-                    isCollapsed && "justify-center px-2",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "p-2 rounded-full bg-[#EEF0F1]",
-                      !isCollapsed && "mr-3",
-                    )}
-                  >
-                    {isPending ? (
-                      <Spinner className="h-4 w-4" />
-                    ) : (
-                      <LogOut className="h-4 w-4" />
-                    )}
-                  </div>
-                  {!isCollapsed && (
-                    <span className="text-sm font-medium">
-                      {isPending ? "Logging out..." : "Logout"}
-                    </span>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              {isCollapsed && (
-                <TooltipContent side="right">Logout</TooltipContent>
-              )}
-            </Tooltip>
-          </div>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#EEF0F1]">
+                {isLoggingOut ? <Spinner size="sm" /> : <LogOut className="h-4 w-4" />}
+              </span>
+              {!isCollapsed && (isLoggingOut ? "Logging out..." : "Logout")}
+            </button>
+          </CollapsedTooltip>
         </div>
-      </>
+      </aside>
     </TooltipProvider>
   );
 }

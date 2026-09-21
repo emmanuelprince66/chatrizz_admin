@@ -1,82 +1,45 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { MessageResponse } from "../types";
+import { getApiErrorMessage } from "../utils";
 
-// Response interfaces
-interface DeleteResponse {
-  message?: string;
-  success?: boolean;
-}
+export type DeleteResponse = MessageResponse;
 
-// API endpoints
-const deletePost = async (id: string | number): Promise<DeleteResponse> => {
-  const response = await axiosInstance.post<DeleteResponse>(
-    `/admin/delete_post/${id}/`,
-  );
-  return response.data;
-};
+type ContentId = string | number;
 
-const deleteProduct = async (id: string | number): Promise<DeleteResponse> => {
-  const response = await axiosInstance.post<DeleteResponse>(
-    `/admin/delete_product/${id}/`,
-  );
-  return response.data;
-};
-
-const deleteReview = async (id: string | number): Promise<DeleteResponse> => {
-  const response = await axiosInstance.post<DeleteResponse>(
-    `/admin/delete_review/${id}/`,
-  );
-  return response.data;
-};
-
-// Mutation hooks
-export const useDeletePostMutation = () => {
+const useDeleteContentMutation = (
+  getEndpoint: (id: ContentId) => string,
+  label: "Post" | "Product" | "Review",
+) => {
   const queryClient = useQueryClient();
 
-  return useMutation<DeleteResponse, Error, string | number>({
-    mutationFn: deletePost,
+  return useMutation<DeleteResponse, Error, ContentId>({
+    mutationFn: async (id) => {
+      const { data } = await axiosInstance.post<DeleteResponse>(getEndpoint(id));
+      return data;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["content"] });
-      toast.success("Post deleted successfully");
+      queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
+      // Content also appears on the author's profile page.
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+      toast.success(`${label} deleted successfully`);
     },
     onError: (error) => {
-      console.error("Delete post error:", error);
-      toast.error("Failed to delete post");
+      toast.error(
+        getApiErrorMessage(error, `Failed to delete ${label.toLowerCase()}`),
+      );
     },
   });
 };
 
-export const useDeleteProductMutation = () => {
-  const queryClient = useQueryClient();
+export const useDeletePostMutation = () =>
+  useDeleteContentMutation(ENDPOINTS.content.deletePost, "Post");
 
-  return useMutation<DeleteResponse, Error, string | number>({
-    mutationFn: deleteProduct,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["content"] });
-      toast.success("Product deleted successfully");
-    },
-    onError: (error) => {
-      console.error("Delete product error:", error);
-      toast.error("Failed to delete product");
-    },
-  });
-};
+export const useDeleteProductMutation = () =>
+  useDeleteContentMutation(ENDPOINTS.content.deleteProduct, "Product");
 
-export const useDeleteReviewMutation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<DeleteResponse, Error, string | number>({
-    mutationFn: deleteReview,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["content"] });
-      toast.success("Review deleted successfully");
-    },
-    onError: (error) => {
-      console.error("Delete review error:", error);
-      toast.error("Failed to delete review");
-    },
-  });
-};
-
-export type { DeleteResponse };
+export const useDeleteReviewMutation = () =>
+  useDeleteContentMutation(ENDPOINTS.content.deleteReview, "Review");

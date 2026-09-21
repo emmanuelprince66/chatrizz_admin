@@ -1,17 +1,24 @@
+import { SESSION_EXPIRED_PARAM, SESSION_EXPIRED_VALUE } from "@/api/session";
 import LoginForm from "@/components/auth/LoginForm";
-import { useAuthStore } from "@/store/authStore";
-import { Navigate } from "react-router-dom";
+import { tokenStorage } from "@/lib/token-storage";
+import { useEffect } from "react";
+import { Navigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 
 export const Login = () => {
-  const { isAuthenticated } = useAuthStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isSessionExpired =
+    searchParams.get(SESSION_EXPIRED_PARAM) === SESSION_EXPIRED_VALUE;
 
-  if (isAuthenticated) {
+  useEffect(() => {
+    if (!isSessionExpired) return;
+    toast.error("Session expired. Please login again.");
+    setSearchParams({}, { replace: true });
+  }, [isSessionExpired, setSearchParams]);
+
+  if (tokenStorage.hasSession()) {
     return <Navigate to="/overview" replace />;
   }
 
-  return (
-    <div className="">
-      <LoginForm />
-    </div>
-  );
+  return <LoginForm />;
 };

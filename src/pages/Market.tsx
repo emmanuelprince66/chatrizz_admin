@@ -1,7 +1,15 @@
-// pages/verification/index.tsx or components/Verification.tsx
-
+import {
+  useFetchMarketplaceQuery,
+  type MarketplaceProduct,
+} from "@/api/marketplace/fetch-marketplace";
+import { useProductStatusMutation } from "@/api/marketplace/product-actions";
+import loginPlaceholder from "@/assets/login_one.png";
+import { DatePickerWithRange } from "@/components/app/DateRangePicker";
+import { PageHeader } from "@/components/app/PageHeader";
+import { CustomTable } from "@/components/app/CustomTable";
 import { SearchInput } from "@/components/app/SearchInput";
-import { Badge } from "@/components/ui/badge";
+import { MarketProductSheet } from "@/components/app/marketplace/MarketProductSheet";
+import { StatCard } from "@/components/app/StatCard";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,383 +17,333 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useDebounce } from "@/hooks/useDebounce";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Building,
-  Building2,
-  CheckCircle,
-  ChevronDown,
+  Check,
   MoreHorizontal,
-  User,
-  Users,
-  UserX,
+  Package,
+  X,
 } from "lucide-react";
-import { useState } from "react";
+import { format } from "date-fns";
+import { useMemo, useState } from "react";
+import type { DateRange } from "react-day-picker";
 
-// Dummy data
-const verificationData = [
-  {
-    id: 1,
-    applicantName: "Tobi Olosunde",
-    type: "Personal",
-    plan: "Monthly",
-    status: "Approved",
-    date: "01/01/2024",
-  },
-  {
-    id: 2,
-    applicantName: "Tobi Olosunde",
-    type: "Business",
-    plan: "Monthly",
-    status: "Pending",
-    date: "01/01/2024",
-  },
-  {
-    id: 3,
-    applicantName: "Tobi Olosunde",
-    type: "Organization",
-    plan: "Monthly",
-    status: "Rejected",
-    date: "01/01/2024",
-  },
-  {
-    id: 4,
-    applicantName: "Tobi Olosunde",
-    type: "Personal",
-    plan: "Monthly",
-    status: "Approved",
-    date: "01/01/2024",
-  },
-  {
-    id: 5,
-    applicantName: "Tobi Olosunde",
-    type: "Personal",
-    plan: "Monthly",
-    status: "Approved",
-    date: "01/01/2024",
-  },
+const productImage = loginPlaceholder;
+
+interface Product {
+  id: number;
+  name: string;
+  seller: string;
+  price: string;
+  date: string;
+  status: "Available" | "Rejected";
+  thumbnail: string;
+  source: MarketplaceProduct;
+}
+
+/* Transactions flow is disabled until the backend provides a transactions endpoint.
+type Transaction = [
+  date: string,
+  buyer: string,
+  vendor: string,
+  product: string,
+  price: string,
 ];
 
-const statsData = [
-  {
-    id: 1,
-    title: "Total Products",
-    count: "3,434",
-    icon: CheckCircle,
-    bgColor: "bg-slate-800",
-    iconColor: "text-white",
-  },
-  {
-    id: 2,
-    title: "Value",
-    count: "3400",
-    icon: Users,
-    bgColor: "bg-slate-800",
-    iconColor: "text-white",
-  },
-  {
-    id: 3,
-    title: "Total Cart Reachout ",
-    count: "34",
-    icon: UserX,
-    bgColor: "bg-slate-800",
-    iconColor: "text-white",
-  },
-  {
-    id: 4,
-    title: "Value of Cart Reachout",
-    count: "34",
-    icon: UserX,
-    bgColor: "bg-slate-800",
-    iconColor: "text-white",
-  },
+// Placeholder data until the transactions and metrics endpoints exist.
+const transactions: Transaction[] = [
+  ["01/01/2024", "@sandra", "@tobi_o", "MacBook Pro 2025", "₦3,500,000"],
+  ["01/01/2024", "@sandra", "@tobi_o", "MacBook Pro 2025", "₦3,500,000"],
+  ["01/01/2024", "@ola01", "@john_doe", "MacBook Pro 2025", "₦3,500,000"],
+  ["01/01/2024", "@ola01", "@tobi_o", "MacBook Pro 2025", "₦3,500,000"],
 ];
+*/
 
-// const badgeStats = [
-//   {
-//     type: "Individual Badge",
-//     count: "1.4k",
-//     color: "bg-blue-100 text-blue-700",
-//     icon: User,
-//   },
-//   {
-//     type: "Business Badge",
-//     count: "1k",
-//     color: "bg-green-100 text-green-700",
-//     icon: Building,
-//   },
-//   {
-//     type: "Organization Badge",
-//     count: "1k",
-//     color: "bg-yellow-100 text-yellow-700",
-//     icon: Building2,
-//   },
-// ];
+const toApiDate = (date?: Date) =>
+  date ? format(date, "yyyy-MM-dd") : undefined;
 
-const Market = () => {
-  const [searchValue, setSearchValue] = useState("");
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [timeFilter] = useState("This Month");
+const toProduct = (product: MarketplaceProduct): Product => ({
+  id: product.id,
+  name: product.name,
+  seller: product.user,
+  price: `₦${Number(product.price).toLocaleString()}`,
+  date: new Date(product.created_at).toLocaleDateString(),
+  status: product.status === "APPROVED" ? "Available" : "Rejected",
+  thumbnail:
+    product.media_files.find((media) => media.media_type === "image")?.file ??
+    productImage,
+  source: product,
+});
 
-  const getStatusBadge = (status: string) => {
-    const statusStyles = {
-      Approved: "bg-green-100 text-green-700 hover:bg-green-100",
-      Pending: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
-      Rejected: "bg-red-100 text-red-700 hover:bg-red-100",
-    };
-
-    return (
-      <Badge
-        className={`text-xs font-medium px-2 py-1 ${
-          statusStyles[status as keyof typeof statusStyles] ||
-          "bg-gray-100 text-gray-700"
-        }`}
+const ProductAction = ({
+  product,
+  onView,
+  onDecision,
+}: {
+  product: Product;
+  onView: () => void;
+  onDecision: (decision: "approve" | "reject") => void;
+}) => (
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <button
+        aria-label={`Actions for ${product.name}`}
+        className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white"
       >
-        {status}
-      </Badge>
-    );
-  };
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="end" className="min-w-[150px] bg-white">
+      <DropdownMenuItem onClick={onView}>View more</DropdownMenuItem>
+      <DropdownMenuItem
+        className="text-emerald-600"
+        onClick={() => onDecision("approve")}
+      >
+        <Check className="mr-2 h-4 w-4" />
+        Approve
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className="text-red-500"
+        onClick={() => onDecision("reject")}
+      >
+        <X className="mr-2 h-4 w-4" />
+        Reject
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+);
 
-  const getTypeIcon = (type: string) => {
-    const iconMap = {
-      Personal: User,
-      Business: Building,
-      Organization: Building2,
-    };
-    const IconComponent = iconMap[type as keyof typeof iconMap] || User;
-    return <IconComponent className="w-4 h-4 text-gray-600" />;
-  };
+const Marketplace = () => {
+  const [search, setSearch] = useState("");
+  const [selectedProductId, setSelectedProductId] = useState<number>();
+  // const [selectedTransaction, setSelectedTransaction] = useState<Transaction>();
+  const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange>();
+  const debouncedSearch = useDebounce(search, 500);
 
-  const filterButtons = ["All", "Approved", "Pending", "Rejected"];
+  const { data: marketplaceData, isLoading } = useFetchMarketplaceQuery({
+    search: debouncedSearch || undefined,
+    page: 1,
+    limit: 15,
+    start_date: toApiDate(dateRange?.from),
+    end_date: toApiDate(dateRange?.to ?? dateRange?.from),
+  });
+  // Unfiltered and count-only, so the card shows every product uploaded regardless of search.
+  const { data: totalProductsData, isLoading: isTotalLoading } =
+    useFetchMarketplaceQuery({ page: 1, limit: 1 });
+  const { mutate: updateProductStatus } = useProductStatusMutation();
+
+  const products = useMemo(
+    () => (marketplaceData?.results ?? []).map(toProduct),
+    [marketplaceData],
+  );
+  // Looked up from the latest list so the panel reflects approve/reject immediately.
+  const selectedProduct = products.find(
+    (product) => product.id === selectedProductId,
+  );
+
+  const productColumns = useMemo<ColumnDef<Product>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Product Name",
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <img
+              src={row.original.thumbnail}
+              alt=""
+              className="h-9 w-9 rounded object-cover"
+            />
+            <span className="font-medium text-gray-800">
+              {row.original.name}
+            </span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "price",
+        header: "Price",
+      },
+      {
+        accessorKey: "seller",
+        header: "Vendor",
+      },
+      {
+        accessorKey: "date",
+        header: "Date",
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => (
+          <span
+            className={
+              row.original.status === "Available"
+                ? "text-emerald-600"
+                : "text-red-500"
+            }
+          >
+            {row.original.status}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Action",
+        cell: ({ row }) => (
+          <div className="flex justify-end">
+            <ProductAction
+              product={row.original}
+              onDecision={(decision) =>
+                updateProductStatus({ id: row.original.id, action: decision })
+              }
+              onView={() => {
+                setSelectedProductId(row.original.id);
+                setIsProductSheetOpen(true);
+              }}
+            />
+          </div>
+        ),
+      },
+    ],
+    [updateProductStatus],
+  );
+
+/* Transactions flow disabled (see note above).
+  const transactionColumns = useMemo<ColumnDef<Transaction>[]>(
+    () => [
+      { id: "date", header: "Date", accessorFn: (row) => row[0] },
+      { id: "buyer", header: "Buyer", accessorFn: (row) => row[1] },
+      { id: "vendor", header: "Vendor", accessorFn: (row) => row[2] },
+      { id: "product", header: "Product Name", accessorFn: (row) => row[3] },
+      { id: "price", header: "Price", accessorFn: (row) => row[4] },
+      {
+        id: "action",
+        header: "Action taken",
+        cell: () => <span>Messaged vendor</span>,
+      },
+    ],
+    [],
+  );
+*/
 
   return (
-    <div className="min-h-screen ">
-      <div className=" mx-auto">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 gap-4">
-          <h1 className="text-3xl md:text-4xl font--[500] text-gray-900">
-            Marketplace
-          </h1>
-
-          <div className="flex flex-col sm:flex-row gap-4">
+    <div className="space-y-6">
+      <PageHeader
+        title="Marketplace"
+        description="Review and moderate products listed by users."
+        actions={
+          <>
             <SearchInput
-              placeholder="Search"
-              value={searchValue}
-              onValueChange={setSearchValue}
-              className="w-full sm:w-80"
+              placeholder="Search products..."
+              value={search}
+              onValueChange={setSearch}
+              className="w-full sm:w-64"
             />
-
-            <Select defaultValue={timeFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue />
-                <ChevronDown className="w-4 h-4" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="This Month">This Month</SelectItem>
-                <SelectItem value="Last Month">Last Month</SelectItem>
-                <SelectItem value="This Year">This Year</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {statsData.map((stat) => {
-            const IconComponent = stat.icon;
-            return (
-              <div
-                key={stat.id}
-                className={`${stat.bgColor} rounded-lg p-6 text-white`}
+            <DatePickerWithRange
+              date={dateRange}
+              onDateChange={setDateRange}
+              className="w-full sm:w-64"
+            />
+            {dateRange?.from && (
+              <Button
+                variant="ghost"
+                onClick={() => setDateRange(undefined)}
+                className="h-10 rounded-full text-gray-600"
               >
-                <div className="flex items-center gap-4  mb-4">
-                  <IconComponent className={`w-6 h-6 ${stat.iconColor}`} />
-                  <div className="text-sm opacity-90">{stat.title}</div>
-                </div>
-                <div className="text-3xl font-bold mb-1 flex justify-end">
-                  {stat.count}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                Clear dates
+              </Button>
+            )}
+          </>
+        }
+      />
 
-        {/* Filter Buttons */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {filterButtons.map((filter) => (
-            <Button
-              key={filter}
-              variant={activeFilter === filter ? "default" : "outline"}
-              onClick={() => setActiveFilter(filter)}
-              className={`${
-                activeFilter === filter
-                  ? "bg-[#0892D0] hover:bg-[#0892D0]/90 text-white"
-                  : "border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              {filter}
-            </Button>
-          ))}
-        </div>
-
-        {/* Table Container */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          {/* Desktop Table */}
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300"
-                    />
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Applicant Name
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Type
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Plan
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Status
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Date
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {verificationData.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300"
-                      />
-                    </td>
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      {item.applicantName}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {getTypeIcon(item.type)}
-                        <span className="text-gray-700">{item.type}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">{item.plan}</td>
-                    <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
-                    <td className="px-6 py-4 text-gray-600">{item.date}</td>
-                    <td className="px-6 py-4">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Approve</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            Reject
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="lg:hidden">
-            {verificationData.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 border-b border-gray-200 last:border-b-0"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300"
-                    />
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {item.applicantName}
-                      </h3>
-                      <p className="text-sm text-gray-600">{item.date}</p>
-                    </div>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Approve</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">
-                        Reject
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">
-                      Type
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {getTypeIcon(item.type)}
-                      <span className="text-sm text-gray-700">{item.type}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">
-                      Plan
-                    </p>
-                    <p className="text-sm text-gray-700 mt-1">{item.plan}</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">
-                      Status
-                    </p>
-                    <div className="mt-1">{getStatusBadge(item.status)}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Total Products"
+          value={(totalProductsData?.count ?? 0).toLocaleString()}
+          icon={<Package />}
+          loading={isTotalLoading}
+        />
       </div>
+
+      <CustomTable
+        columns={productColumns}
+        data={products}
+        showSerialNumber={false}
+        loading={isLoading}
+        noDataText="No products found."
+      />
+
+      <MarketProductSheet
+        product={selectedProduct?.source}
+        open={isProductSheetOpen}
+        onOpenChange={setIsProductSheetOpen}
+      />
+
+      {/* Transactions flow disabled (see note at the top of the file).
+      <Sheet
+        open={!!selectedTransaction}
+        onOpenChange={(open) => !open && setSelectedTransaction(undefined)}
+      >
+        <SheetContent className="w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-md">
+          <SheetHeader className="px-0 pb-2">
+            <SheetTitle>Transaction details</SheetTitle>
+          </SheetHeader>
+          {selectedTransaction && (
+            <div className="space-y-4 pt-2">
+              <div className="rounded-2xl bg-gray-100 p-5">
+                <p className="text-xs uppercase tracking-wide text-gray-500">
+                  Product
+                </p>
+                <div className="mt-3 flex items-center gap-3">
+                  <img
+                    src={productImage}
+                    alt=""
+                    className="h-12 w-12 rounded-lg object-cover"
+                  />
+                  <div>
+                    <p className="font-medium">{selectedTransaction[3]}</p>
+                    <p className="text-sm text-[#0892D0]">
+                      {selectedTransaction[4]}
+                    </p>
+                  </div>
+                </div>
+                <span className="mt-3 inline-flex rounded-full bg-amber-50 px-2 py-1 text-xs text-amber-700">
+                  Backend data required
+                </span>
+              </div>
+              <div className="rounded-2xl bg-gray-100 p-5">
+                <p className="text-xs uppercase tracking-wide text-gray-500">
+                  Buyer
+                </p>
+                <p className="mt-2 font-medium">{selectedTransaction[1]}</p>
+              </div>
+              <div className="rounded-2xl bg-gray-100 p-5">
+                <p className="text-xs uppercase tracking-wide text-gray-500">
+                  Vendor
+                </p>
+                <p className="mt-2 font-medium">{selectedTransaction[2]}</p>
+              </div>
+              <div className="rounded-2xl bg-gray-100 p-5">
+                <p className="text-xs uppercase tracking-wide text-gray-500">
+                  Action taken
+                </p>
+                <p className="mt-2 text-sm text-gray-700">Messaged vendor</p>
+              </div>
+              <Button variant="outline" className="w-full">
+                Backend action required
+              </Button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+      */}
+
     </div>
   );
 };
 
-export default Market;
+
+export default Marketplace;

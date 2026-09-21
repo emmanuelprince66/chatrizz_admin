@@ -1,4 +1,5 @@
 import AdminManagementPage from "@/components/app/admin/AdminManagement";
+import ViewProfile from "@/components/app/profile/ViewProfile";
 import ResetPassword from "@/components/app/settings/ResetPassword";
 import { Layout } from "@/components/layout/Layout";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoutes";
@@ -11,11 +12,22 @@ import Notification from "@/pages/Notification";
 import Overview from "@/pages/Overview";
 import Payments from "@/pages/Payments";
 import Profile from "@/pages/Profile";
-import Promotion from "@/pages/Promotion";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
 import Verification from "@/pages/Verification";
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import Subscriptions from "@/pages/Subscriptions";
+import { createBrowserRouter, Navigate, useParams } from "react-router-dom";
+
+// eslint-disable-next-line react-refresh/only-export-components
+const ViewProfilePage = () => {
+  const { userId } = useParams();
+
+  if (!userId) {
+    return <Navigate to="/users" replace />;
+  }
+
+  return <ViewProfile userId={userId} />;
+};
 
 // Placeholder pages
 // const PlaceholderPage = ({ title }: { title: string }) => (
@@ -51,6 +63,10 @@ export const router = createBrowserRouter([
         element: <Profile />,
       },
       {
+        path: "users/:userId",
+        element: <ViewProfilePage />,
+      },
+      {
         path: "market",
         element: <Market />,
       },
@@ -63,6 +79,10 @@ export const router = createBrowserRouter([
         element: <Verification />,
       },
       {
+        path: "subscriptions",
+        element: <Subscriptions />,
+      },
+      {
         path: "reports",
         element: <Reports />,
       },
@@ -73,10 +93,6 @@ export const router = createBrowserRouter([
       {
         path: "payments",
         element: <Payments />,
-      },
-      {
-        path: "promotions",
-        element: <Promotion />,
       },
       {
         path: "notifications",

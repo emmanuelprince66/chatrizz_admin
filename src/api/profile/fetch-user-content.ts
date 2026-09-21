@@ -1,7 +1,8 @@
-// src/api/profile/fetch-user-content.ts
-
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { PaginatedResponse, QueryOptions } from "../types";
 
 export type ContentFilter = "POST" | "PRODUCT" | "REVIEW";
 
@@ -17,6 +18,14 @@ interface UserBrief {
   profile_picture: string;
 }
 
+interface QuotedPost {
+  id: string;
+  user: UserBrief;
+  body: string;
+  media: PostMedia[];
+  created_at: string;
+}
+
 interface Post {
   id: string;
   user: UserBrief;
@@ -24,7 +33,7 @@ interface Post {
   media: PostMedia[];
   parent_post: string | null;
   quoted_post: string | null;
-  quoted_post_detail: any | null;
+  quoted_post_detail: QuotedPost | null;
   like_count: number;
   bookmarks_count: number;
   quotes_count: number;
@@ -87,72 +96,37 @@ interface Review {
   media_files: ReviewMedia[];
 }
 
-interface PaginationLinks {
-  next: string | null;
-  previous: string | null;
-}
+export type UserContentApiResponse<T> = PaginatedResponse<T>;
 
-interface UserContentApiResponse<T> {
-  links: PaginationLinks;
-  total: number;
-  limit: number;
-  pages: number;
-  results: T[];
-}
-
-interface FetchUserContentParams {
+export interface FetchUserContentParams {
   userId: string;
   filter: ContentFilter;
   page?: number;
   limit?: number;
 }
 
-interface UseFetchUserContentQueryOptions {
-  params: FetchUserContentParams;
-  enabled?: boolean;
-}
-
 export const useFetchUserContentQuery = <T = Post | Product | Review>({
   params,
   enabled = true,
-}: UseFetchUserContentQueryOptions) => {
-  const cleanParams = {
+}: QueryOptions & { params: FetchUserContentParams }) => {
+  const queryParams = {
     type: params.filter,
     page: params.page || 1,
     limit: params.limit || 10,
   };
 
   return useQuery<UserContentApiResponse<T>, Error>({
-    queryKey: [
-      "user-content",
-      params.userId,
-      cleanParams.type,
-      cleanParams.page,
-      cleanParams.limit,
-    ],
-
+    queryKey: queryKeys.users.content(params.userId, queryParams),
     queryFn: async () => {
-      const response = await axiosInstance.get<UserContentApiResponse<T>>(
-        `/admin/user_content/${params.userId}/`,
-        {
-          params: cleanParams,
-        },
+      const { data } = await axiosInstance.get<UserContentApiResponse<T>>(
+        ENDPOINTS.users.content(params.userId),
+        { params: queryParams },
       );
-      return response.data;
+      return data;
     },
-
     enabled: enabled && !!params.userId,
-    staleTime: 3 * 60 * 1000, // 3 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    retry: 2,
+    staleTime: 3 * 60 * 1000,
   });
 };
 
-export type {
-  FetchUserContentParams,
-  Post,
-  Product,
-  Review,
-  UserContentApiResponse,
-};
+export type { Post, Product, Review };

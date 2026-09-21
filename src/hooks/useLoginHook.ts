@@ -1,46 +1,40 @@
 import { axiosInstance } from "@/api/axios";
+import { ENDPOINTS } from "@/api/endpoints";
+import { getApiErrorMessage } from "@/api/utils";
+import { tokenStorage } from "@/lib/token-storage";
+import { useAuthStore } from "@/store/authStore";
+import type { LoginResponse } from "@/types/auth.types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import Cookies from "js-cookie";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import * as z from "zod";
 
-// Validation schema
+const DEFAULT_REDIRECT = "/overview";
+
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
   password: z
     .string()
     .min(1, "Password is required")
-    .min(6, "Password must be at least 6 characters"),
+    .min(8, "Password must be at least 8 characters")
+    .max(68, "Password must be at most 68 characters"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-// Updated Types based on actual API response
-interface LoginResponse {
-  id: string;
-  email: string;
-  tokens: {
-    refresh: string;
-    access: string;
-  };
-  is_verified: boolean;
-  profile: boolean;
-}
-
-// interface UserData {
-//   id: string;
-//   email: string;
-//   is_verified: boolean;
-//   profile: boolean;
-// }
+/** Only same-app paths are allowed, so a crafted link can't redirect off-site after login. */
+const getSafeRedirect = (from: unknown): string =>
+  typeof from === "string" && from.startsWith("/") && !from.startsWith("//")
+    ? from
+    : DEFAULT_REDIRECT;
 
 export const useLoginHook = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const setUser = useAuthStore((state) => state.setUser);
 
-  // Form handling
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -49,38 +43,23 @@ export const useLoginHook = () => {
     },
   });
 
-  // API mutation
   const mutation = useMutation({
     mutationFn: async (credentials: LoginFormValues) => {
-      const response = await axiosInstance.post<LoginResponse>(
-        "/auth/login/",
+      const { data } = await axiosInstance.post<LoginResponse>(
+        ENDPOINTS.auth.login,
         credentials,
+        { skipAuth: true },
       );
-      return response.data;
+      return data;
     },
-
-    onSuccess: (data) => {
-      console.log("data", data);
-
-      // Extract tokens and user data
-      const { tokens, ...userData } = data;
-
-      Cookies.set("access_token", tokens.access);
-
-      Cookies.set("refresh_token", tokens.refresh);
-
-      // Store user data in localStorage
-      localStorage.setItem("user_data", JSON.stringify(userData));
-
-      // Update auth store
-
+    onSuccess: ({ tokens, ...user }) => {
+      tokenStorage.setTokens(tokens);
+      setUser(user);
       toast.success("Login successful!");
-      navigate("/overview");
+      navigate(getSafeRedirect(location.state?.from), { replace: true });
     },
-
-    onError: (error: any) => {
-      console.log("error", error);
-      toast.error(error.response?.data?.message || "Login failed");
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Invalid email or password."));
     },
   });
 

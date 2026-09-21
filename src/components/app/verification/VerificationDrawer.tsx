@@ -1,147 +1,168 @@
+import type {
+  AdminVerification,
+  VerificationStatus,
+} from "@/api/verification/fetch-verifications";
+import type { VerificationDecision } from "@/api/verification/verification-actions";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  CheckCircle,
-  ChevronRight,
-  CreditCard,
-  FileText,
-  MapPin,
-  Star,
-} from "lucide-react";
+  DetailList,
+  DetailRow,
+  DetailsSheet,
+  NoteBlock,
+  PANEL_DANGER_BUTTON,
+  PANEL_DATE_FORMAT,
+  PANEL_SUCCESS_BUTTON,
+  PanelActionRow,
+  PanelBadge,
+  PanelEmptyState,
+  PanelSection,
+  PersonRow,
+} from "@/components/app/details-panel";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { formatDate } from "@/util/format-date";
+import { Check, ChevronRight, FileText, Link2, X } from "lucide-react";
+
+const STATUS_TONE: Record<VerificationStatus, "green" | "yellow" | "red"> = {
+  APPROVED: "green",
+  PENDING: "yellow",
+  REJECTED: "red",
+};
+
+const capitalize = (value: string) =>
+  value.charAt(0) + value.slice(1).toLowerCase();
+
+interface VerificationDrawerProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  verification?: AdminVerification;
+  onDecision: (decision: VerificationDecision) => void;
+  isDecisionPending: boolean;
+  pendingDecision?: VerificationDecision;
+}
+
 const VerificationDrawer = ({
   open,
   onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) => {
+  verification,
+  onDecision,
+  isDecisionPending,
+  pendingDecision,
+}: VerificationDrawerProps) => {
+  if (!verification) return null;
+
+  const { user, status } = verification;
+  const documents = [
+    { label: "Government ID", url: verification.goverment_id },
+    { label: "Business document", url: verification.business_document },
+    { label: "Social media profile", url: verification.social_media },
+  ].filter((document): document is { label: string; url: string } => !!document.url);
+
   return (
-    <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="bg-white border  border-gray-200 flex flex-col">
-          {" "}
-          {/* Added flex-col */}
-          <SheetHeader>
-            <SheetTitle>Verification Details</SheetTitle>
-          </SheetHeader>
-          <div className="flex-1 space-y-6 p-4">
-            {/* Profile Section */}
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                  <div className="w-8 h-8 bg-gray-600 rounded-full"></div>
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-3 h-3 text-white" />
-                </div>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-medium text-gray-900">Tobi Olosunde</h3>
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                </div>
-                <p className="text-sm text-gray-500">@tobi_c</p>
-              </div>
-            </div>
+    <DetailsSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Verification details"
+      badge={<PanelBadge tone={STATUS_TONE[status]}>{capitalize(status)}</PanelBadge>}
+      description={`Submitted ${formatDate(verification.created_at, PANEL_DATE_FORMAT)}`}
+      footer={
+        <PanelActionRow>
+          <Button
+            variant="outline"
+            onClick={() => onDecision("accept")}
+            disabled={isDecisionPending || status === "APPROVED"}
+            className={PANEL_SUCCESS_BUTTON}
+          >
+            {pendingDecision === "accept" && isDecisionPending ? (
+              <Spinner size="sm" />
+            ) : (
+              <Check />
+            )}
+            {status === "APPROVED" ? "Approved" : "Approve"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onDecision("reject")}
+            disabled={isDecisionPending || status === "REJECTED"}
+            className={PANEL_DANGER_BUTTON}
+          >
+            {pendingDecision === "reject" && isDecisionPending ? (
+              <Spinner size="sm" />
+            ) : (
+              <X />
+            )}
+            {status === "REJECTED" ? "Rejected" : "Reject"}
+          </Button>
+        </PanelActionRow>
+      }
+    >
+      <PanelSection title="Applicant">
+        <PersonRow
+          person={{
+            id: user.id,
+            name: user.full_name,
+            username: user.username,
+          }}
+        />
+        <DetailList>
+          <DetailRow label="Email">{user.email || "Not provided"}</DetailRow>
+          <DetailRow label="Username">
+            {user.username ? `@${user.username}` : "Not set"}
+          </DetailRow>
+        </DetailList>
+        {user.bio?.trim() && <NoteBlock label="Bio">{user.bio}</NoteBlock>}
+      </PanelSection>
 
-            {/* Lloyd Payne Section */}
-            <div className="flex items-center space-x-2 text-sm">
-              <MapPin className="w-4 h-4 text-green-500" />
-              <span className="text-green-600 font-medium">Lagos Nigeria</span>
-            </div>
+      <PanelSection title="Application">
+        <DetailList>
+          <DetailRow label="Badge type">{capitalize(verification.type)}</DetailRow>
+          <DetailRow label="Status">{capitalize(status)}</DetailRow>
+          <DetailRow label="NIN">
+            {verification.nin ? (
+              <span className="font-mono text-xs">{verification.nin}</span>
+            ) : (
+              "Not provided"
+            )}
+          </DetailRow>
+        </DetailList>
+      </PanelSection>
 
-            {/* Laundry Service Rating */}
-            <div className="">
-              <div className="flex items-center space-x-2 mb-5">
-                <h4 className="font-medium py-2 px-3 border border-gray-200 bg-gray-100 rounded-lg  text-gray-900">
-                  Laundry Service
-                </h4>
-                <div className="flex items-center space-x-1">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-medium">3.5</span>
-                  <span className="text-sm text-gray-500">from reviews</span>
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Lorem ipsum dolor sit amet consectetur. Viverra eget eget sit
-                quentas sed mauris. Neque pellentesque quam euismod...
-              </p>
-            </div>
-
-            {/* Verification Status */}
-            <div>
-              <h4 className="font-medium text-gray-700 mb-3">
-                Verification Status
-              </h4>
-              <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="font-medium text-gray-900">
-                    Business Account
+      <PanelSection title="Submitted documents">
+        {documents.length > 0 ? (
+          <div className="space-y-2">
+            {documents.map((document) => {
+              const Icon = document.label.startsWith("Social") ? Link2 : FileText;
+              return (
+                <a
+                  key={document.label}
+                  href={document.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex items-center gap-3 rounded-xl border border-gray-100 p-4 transition-colors hover:border-primary/40 hover:bg-[#F5FAFD]"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#E6F4FA] text-primary">
+                    <Icon className="h-4 w-4" />
                   </span>
-                </div>
-                <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded">
-                  Pending
-                </span>
-              </div>
-            </div>
-
-            {/* Submitted Docs */}
-            <div>
-              <h4 className="font-medium text-gray-700 mb-3">Submitted Docs</h4>
-              <div className="space-y-2">
-                {/* CAC Registration */}
-                <div className="flex cursor-pointer items-center justify-between p-5 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <FileText className="w-5 h-5 text-gray-500" />
-                    <span className="font-medium text-gray-900">
-                      CAC Registration
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium text-gray-900">
+                      {document.label}
                     </span>
-                  </div>
-                  <div className="flex items-center border border-gray-200 hover:border-gray-400  justify-center bg-gray-100 w-8 h-8 rounded-full">
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                  </div>
-                </div>
-
-                {/* ID Card */}
-                <div className="flex cursor-pointer items-center justify-between p-5 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <CreditCard className="w-5 h-5 text-gray-500" />
-                    <span className="font-medium text-gray-900">ID Card</span>
-                  </div>
-                  <div className="flex items-center border border-gray-200 hover:border-gray-400  justify-center bg-gray-100 w-8 h-8 rounded-full">
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Submission Date */}
-            <div className="text-sm text-gray-500">
-              Submitted on: 25-08-2025
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex space-x-3 pt-4 gap-3 border-t border-gray-200">
-              <button className="flex-1 flex items-center cursor-pointer justify-center space-x-2 px-4 py-3 bg-gray-100 border border-gray-200 text-white rounded-lg font-medium  transition-colors">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="text-black">Approve</span>
-              </button>
-              <button className="flex-1 flex cursor-pointer items-center justify-center space-x-2 px-4 py-3 bg-gray-100 border border-gray-200 text-white rounded-lg font-medium  transition-colors">
-                <span className="w-4 h-4 flex items-center justify-center text-red-500   font-bold">
-                  ✕
-                </span>
-                <span className="text-black">Reject</span>
-              </button>
-            </div>
+                    <span className="block truncate text-xs text-gray-500">
+                      Opens in a new tab
+                    </span>
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-gray-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                </a>
+              );
+            })}
           </div>
-        </SheetContent>
-      </Sheet>
-    </>
+        ) : (
+          <PanelEmptyState
+            title="No documents"
+            description="The applicant hasn't submitted any documents."
+          />
+        )}
+      </PanelSection>
+    </DetailsSheet>
   );
 };
 

@@ -1,14 +1,18 @@
-import { useFetchReportsQuery } from "@/api/reports/fetch-reports";
-import { useMemo } from "react";
+import {
+  useFetchReportsQuery,
+  type ReportReason,
+  type ReportStatus,
+} from "@/api/reports/fetch-reports";
 import { useDebounce } from "./useDebounce";
+import { useSearchTerm } from "./useSearchTerm";
 
-// interface UseReportsHookProps {
-//   searchInput: string;
-//   page: number;
-//   reason?: string;
-//   status?: string;
-//   pageSize?: number;
-// }
+interface UseReportsHookProps {
+  searchInput: string;
+  page: number;
+  reason?: ReportReason;
+  status?: ReportStatus;
+  pageSize?: number;
+}
 
 export const useReportsHook = ({
   searchInput,
@@ -16,16 +20,8 @@ export const useReportsHook = ({
   reason,
   status,
   pageSize = 15,
-}: any) => {
-  const debouncedSearchTerm = useDebounce(searchInput, 500);
-
-  // Only search if input is 3+ characters or empty (to show all)
-  const searchTerm = useMemo(() => {
-    const trimmedSearch = debouncedSearchTerm?.trim() || "";
-    return trimmedSearch.length >= 3 || trimmedSearch.length === 0
-      ? trimmedSearch
-      : null;
-  }, [debouncedSearchTerm]);
+}: UseReportsHookProps) => {
+  const searchTerm = useSearchTerm(useDebounce(searchInput, 500));
 
   const {
     data: ReportsData,
@@ -36,8 +32,8 @@ export const useReportsHook = ({
   } = useFetchReportsQuery({
     params: {
       search: searchTerm,
-      status: status && status !== "all" ? status : undefined,
-      reason: reason && reason !== "all" ? reason : undefined,
+      status,
+      reason,
       page,
       limit: pageSize,
     },

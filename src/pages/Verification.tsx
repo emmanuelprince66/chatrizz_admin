@@ -1,8 +1,19 @@
-// pages/verification/index.tsx or components/Verification.tsx
-
-"use client";
-import { CustomCard } from "@/components/app/CustomCard";
+import {
+  useFetchVerificationsQuery,
+  type AdminVerification,
+  type VerificationMetrics,
+  type VerificationStatus,
+  type VerificationType,
+} from "@/api/verification/fetch-verifications";
+import {
+  useVerificationDecisionMutation,
+  type VerificationDecision,
+} from "@/api/verification/verification-actions";
+import { FilterPills } from "@/components/app/FilterPills";
+import { PageHeader } from "@/components/app/PageHeader";
+import { CustomTable } from "@/components/app/CustomTable";
 import { SearchInput } from "@/components/app/SearchInput";
+import { StatCard } from "@/components/app/StatCard";
 import VerificationDrawer from "@/components/app/verification/VerificationDrawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,414 +23,293 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
   Building,
   Building2,
   CheckCircle,
-  ChevronDown,
+  Loader2,
   MoreHorizontal,
   User,
   Users,
   UserX,
+  type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-// Dummy data
-const verificationData = [
-  {
-    id: 1,
-    applicantName: "Tobi Olosunde",
-    type: "Personal",
-    plan: "Monthly",
-    status: "Approved",
-    date: "01/01/2024",
-  },
-  {
-    id: 2,
-    applicantName: "Tobi Olosunde",
-    type: "Business",
-    plan: "Monthly",
-    status: "Pending",
-    date: "01/01/2024",
-  },
-  {
-    id: 3,
-    applicantName: "Tobi Olosunde",
-    type: "Organization",
-    plan: "Monthly",
-    status: "Rejected",
-    date: "01/01/2024",
-  },
-  {
-    id: 4,
-    applicantName: "Tobi Olosunde",
-    type: "Personal",
-    plan: "Monthly",
-    status: "Approved",
-    date: "01/01/2024",
-  },
-  {
-    id: 5,
-    applicantName: "Tobi Olosunde",
-    type: "Personal",
-    plan: "Monthly",
-    status: "Approved",
-    date: "01/01/2024",
-  },
-];
+const PAGE_SIZE = 15;
+const FILTERS = ["All", "Approved", "Pending", "Rejected"] as const;
+type StatusFilter = (typeof FILTERS)[number];
 
-const statsData = [
-  {
-    id: 1,
-    title: "Verified Accounts",
-    count: "3,434",
-    icon: CheckCircle,
-    bgColor: "bg-slate-800",
-    iconColor: "text-white",
-  },
-  {
-    id: 2,
-    title: "Active",
-    count: "3400",
-    icon: Users,
-    bgColor: "bg-slate-800",
-    iconColor: "text-white",
-  },
-  {
-    id: 3,
-    title: "Inactive",
-    count: "34",
-    icon: UserX,
-    bgColor: "bg-slate-800",
-    iconColor: "text-white",
-  },
-];
-
-const badgeStats = [
-  {
-    type: "Individual Badge",
-    count: "1.4k",
-    color: "bg-blue-100 text-blue-700",
+const TYPE_META: Record<
+  VerificationType,
+  { label: string; badgeLabel: string; icon: LucideIcon; color: string }
+> = {
+  INDIVIDUAL: {
+    label: "Personal",
+    badgeLabel: "Individual Badge",
     icon: User,
+    color: "bg-blue-100 text-blue-700",
   },
-  {
-    type: "Business Badge",
-    count: "1k",
-    color: "bg-green-100 text-green-700",
+  BUSINESS: {
+    label: "Business",
+    badgeLabel: "Business Badge",
     icon: Building,
+    color: "bg-green-100 text-green-700",
   },
-  {
-    type: "Organization Badge",
-    count: "1k",
-    color: "bg-yellow-100 text-yellow-700",
+  ORGANIZATION: {
+    label: "Organization",
+    badgeLabel: "Organization Badge",
     icon: Building2,
+    color: "bg-yellow-100 text-yellow-700",
   },
-];
+};
+
+const BADGE_METRIC_KEYS: Record<VerificationType, keyof VerificationMetrics> = {
+  INDIVIDUAL: "individual",
+  BUSINESS: "business",
+  ORGANIZATION: "organization",
+};
+
+const STATUS_STYLES: Record<VerificationStatus, string> = {
+  APPROVED: "bg-green-100 text-green-700 hover:bg-green-100",
+  PENDING: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
+  REJECTED: "bg-red-100 text-red-700 hover:bg-red-100",
+};
+
+const capitalize = (value: string) =>
+  value.charAt(0) + value.slice(1).toLowerCase();
+
+const formatMetric = (value?: number) => (value ?? 0).toLocaleString();
+
+const BadgeBreakdownCard = ({
+  metrics,
+  loading,
+}: {
+  metrics: VerificationMetrics;
+  loading: boolean;
+}) => (
+  <div className="flex h-32 flex-col justify-center rounded-2xl border border-gray-100 bg-white px-5 shadow-sm">
+    <div className="space-y-2">
+      {(Object.keys(TYPE_META) as VerificationType[]).map((type) => {
+        const { badgeLabel, icon: Icon, color } = TYPE_META[type];
+        return (
+          <div key={type} className="flex w-full items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div
+                className={`flex h-6 w-6 items-center justify-center rounded-full ${color}`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+              </div>
+              <span className="text-sm text-gray-600">{badgeLabel}</span>
+            </div>
+            {loading ? (
+              <Skeleton className="h-5 w-10" />
+            ) : (
+              <span className="text-sm font-semibold text-gray-900">
+                {formatMetric(metrics[BADGE_METRIC_KEYS[type]])}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+);
 
 const Verification = () => {
   const [searchValue, setSearchValue] = useState("");
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [timeFilter] = useState("This Month");
-  const [openVerificationDrawer, setOpenVerificationDrawer] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<StatusFilter>("All");
+  const [page, setPage] = useState(1);
+  const [selectedVerification, setSelectedVerification] =
+    useState<AdminVerification>();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const getStatusBadge = (status: string) => {
-    const statusStyles = {
-      Approved: "bg-green-100 text-green-700 hover:bg-green-100",
-      Pending: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
-      Rejected: "bg-red-100 text-red-700 hover:bg-red-100",
+  const {
+    data: verificationResponse,
+    isLoading,
+    isError,
+  } = useFetchVerificationsQuery({
+    search: searchValue || undefined,
+    status:
+      activeFilter === "All"
+        ? undefined
+        : (activeFilter.toUpperCase() as VerificationStatus),
+    page,
+    limit: PAGE_SIZE,
+  });
+  const verificationMutation = useVerificationDecisionMutation();
+  const { mutate: decide, isPending: isDeciding } = verificationMutation;
+  const pendingId = isDeciding ? verificationMutation.variables?.id : undefined;
+
+  const metrics = verificationResponse?.metrics ?? {};
+  const statsData = [
+    { title: "Verified Accounts", value: metrics.active_badge, icon: CheckCircle },
+    { title: "Active", value: metrics.active_users, icon: Users },
+    { title: "Inactive", value: metrics.inactive_users, icon: UserX },
+  ];
+
+  const columns = useMemo<ColumnDef<AdminVerification>[]>(() => {
+    const decisionItem = (
+      verification: AdminVerification,
+      decision: VerificationDecision,
+    ) => {
+      const isRowPending = pendingId === verification.id;
+      return (
+        <DropdownMenuItem
+          className={decision === "reject" ? "text-red-600" : undefined}
+          disabled={isDeciding}
+          onClick={() => decide({ id: verification.id, decision })}
+        >
+          {isRowPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isRowPending
+            ? "Processing..."
+            : decision === "accept"
+              ? "Approve"
+              : "Reject"}
+        </DropdownMenuItem>
+      );
     };
 
-    return (
-      <Badge
-        className={`text-xs font-medium px-2 py-1 ${
-          statusStyles[status as keyof typeof statusStyles] ||
-          "bg-gray-100 text-gray-700"
-        }`}
-      >
-        {status}
-      </Badge>
-    );
-  };
-
-  const getTypeIcon = (type: string) => {
-    const iconMap = {
-      Personal: User,
-      Business: Building,
-      Organization: Building2,
-    };
-    const IconComponent = iconMap[type as keyof typeof iconMap] || User;
-    return <IconComponent className="w-4 h-4 text-gray-600" />;
-  };
-
-  const filterButtons = ["All", "Approved", "Pending", "Rejected"];
+    return [
+      {
+        id: "applicantName",
+        header: "Applicant Name",
+        accessorFn: (row) =>
+          row.user.full_name || row.user.username || "Unknown applicant",
+      },
+      {
+        accessorKey: "type",
+        header: "Type",
+        cell: ({ row }) => {
+          const { label, icon: Icon } = TYPE_META[row.original.type];
+          return (
+            <div className="flex items-center gap-2">
+              <Icon className="h-4 w-4 text-gray-600" />
+              <span>{label}</span>
+            </div>
+          );
+        },
+      },
+      {
+        id: "plan",
+        header: "Plan",
+        cell: () => "—",
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => (
+          <Badge
+            className={`px-2 py-1 text-xs font-medium ${STATUS_STYLES[row.original.status]}`}
+          >
+            {capitalize(row.original.status)}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: "created_at",
+        header: "Date",
+        cell: ({ row }) =>
+          new Date(row.original.created_at).toLocaleDateString(),
+      },
+      {
+        id: "actions",
+        header: "Action",
+        cell: ({ row }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <span className="sr-only">Open actions</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => {
+                  setSelectedVerification(row.original);
+                  setIsDrawerOpen(true);
+                }}
+              >
+                View Details
+              </DropdownMenuItem>
+              {decisionItem(row.original, "accept")}
+              {decisionItem(row.original, "reject")}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ];
+  }, [decide, isDeciding, pendingId]);
 
   return (
-    <div className="min-h-screen ">
-      <div className=" mx-auto">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 gap-4">
-          <h1 className="text-3xl md:text-4xl font-[500] text-gray-900">
-            Verification
-          </h1>
+    <div className="space-y-6">
+      <PageHeader
+        title="Verification"
+        description="Review badge applications and verification documents."
+        actions={
+          <SearchInput
+            placeholder="Search applicants..."
+            value={searchValue}
+            onValueChange={setSearchValue}
+            className="w-full sm:w-80"
+          />
+        }
+      />
 
-          <div className="flex flex-col sm:flex-row gap-4">
-            <SearchInput
-              placeholder="Search"
-              value={searchValue}
-              onValueChange={setSearchValue}
-              className="w-full sm:w-80"
-            />
-
-            <Select defaultValue={timeFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue />
-                <ChevronDown className="w-4 h-4" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="This Month">This Month</SelectItem>
-                <SelectItem value="Last Month">Last Month</SelectItem>
-                <SelectItem value="This Year">This Year</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {statsData.map((stat) => {
-            const IconComponent = stat.icon;
-            return (
-              <CustomCard
-                key={stat.id}
-                className={`${stat.bgColor} rounded-lg p-6 text-white`}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <IconComponent className={`w-6 h-6 ${stat.iconColor}`} />
-                </div>
-                <div className="text-3xl font-bold mb-1">{stat.count}</div>
-                <div className="text-sm opacity-90">{stat.title}</div>
-              </CustomCard>
-            );
-          })}
-          <CustomCard>
-            <div className="grid grid-cols-1 gap-4">
-              {badgeStats.map((badge, index) => {
-                const IconComponent = badge.icon;
-                return (
-                  <div
-                    key={index}
-                    className="flex items-center w-full justify-between flex gap-3"
-                  >
-                    <div className="flex gap-3 items-center">
-                      <div
-                        className={`w-8 h-8 rounded-full ${badge.color} flex items-center justify-center`}
-                      >
-                        <IconComponent className="w-4 h-4" />
-                      </div>
-                      <div className="text-sm text-gray-600">{badge.type}</div>
-                    </div>
-
-                    <div>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {badge.count}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CustomCard>
-        </div>
-
-        {/* Badge Statistics */}
-
-        {/* Filter Buttons */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {filterButtons.map((filter) => (
-            <Button
-              key={filter}
-              variant={activeFilter === filter ? "default" : "outline"}
-              onClick={() => setActiveFilter(filter)}
-              className={`${
-                activeFilter === filter
-                  ? "bg-[#0892D0] hover:bg-[#0892D0]/90 text-white"
-                  : "border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              {filter}
-            </Button>
-          ))}
-        </div>
-
-        {/* Table Container */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          {/* Desktop Table */}
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300"
-                    />
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Applicant Name
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Type
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Plan
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Status
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Date
-                  </th>
-                  <th className="text-left font-semibold text-gray-900 px-6 py-4">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {verificationData.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300"
-                      />
-                    </td>
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      {item.applicantName}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {getTypeIcon(item.type)}
-                        <span className="text-gray-700">{item.type}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">{item.plan}</td>
-                    <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
-                    <td className="px-6 py-4 text-gray-600">{item.date}</td>
-                    <td className="px-6 py-4">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => setOpenVerificationDrawer(true)}
-                          >
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Approve</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            Reject
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="lg:hidden">
-            {verificationData.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 border-b border-gray-200 last:border-b-0"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300"
-                    />
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {item.applicantName}
-                      </h3>
-                      <p className="text-sm text-gray-600">{item.date}</p>
-                    </div>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => setOpenVerificationDrawer(true)}
-                      >
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>Approve</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">
-                        Reject
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">
-                      Type
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {getTypeIcon(item.type)}
-                      <span className="text-sm text-gray-700">{item.type}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">
-                      Plan
-                    </p>
-                    <p className="text-sm text-gray-700 mt-1">{item.plan}</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">
-                      Status
-                    </p>
-                    <div className="mt-1">{getStatusBadge(item.status)}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {statsData.map(({ title, value, icon: Icon }) => (
+          <StatCard
+            key={title}
+            title={title}
+            value={formatMetric(value)}
+            icon={<Icon />}
+            loading={isLoading}
+          />
+        ))}
+        <BadgeBreakdownCard metrics={metrics} loading={isLoading} />
       </div>
 
+      <FilterPills
+        options={FILTERS}
+        value={activeFilter}
+        onChange={(filter) => {
+          setActiveFilter(filter);
+          setPage(1);
+        }}
+      />
+
+      <CustomTable
+        columns={columns}
+        data={verificationResponse?.results ?? []}
+        loading={isLoading}
+        noDataText={
+          isError
+            ? "Unable to load verification requests."
+            : "No verification requests found."
+        }
+        showSerialNumber={false}
+        pagination={{
+          currentPage: page,
+          totalPages: verificationResponse?.totalPages ?? 0,
+          pageSize: PAGE_SIZE,
+          onPageChange: setPage,
+          onPageSizeChange: () => setPage(1),
+        }}
+      />
+
       <VerificationDrawer
-        open={openVerificationDrawer}
-        onOpenChange={setOpenVerificationDrawer}
+        open={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
+        verification={selectedVerification}
+        onDecision={(decision) => {
+          if (selectedVerification) {
+            decide({ id: selectedVerification.id, decision });
+          }
+        }}
+        isDecisionPending={isDeciding}
+        pendingDecision={verificationMutation.variables?.decision}
       />
     </div>
   );

@@ -1,13 +1,15 @@
 import { create } from "zustand";
 
 interface UIStore {
-  sidebarOpen: boolean;
-  toggleSidebar: () => void;
-  setSidebarOpen: (open: boolean) => void;
+  /** Whether the sidebar drawer is open on small screens. */
+  isMobileNavOpen: boolean;
+  toggleMobileNav: () => void;
+  closeMobileNav: () => void;
 }
 
 export const useUIStore = create<UIStore>((set) => ({
-  sidebarOpen: true,
-  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-  setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  isMobileNavOpen: false,
+  toggleMobileNav: () =>
+    set((state) => ({ isMobileNavOpen: !state.isMobileNavOpen })),
+  closeMobileNav: () => set({ isMobileNavOpen: false }),
 }));

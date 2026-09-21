@@ -1,15 +1,15 @@
-// src/hooks/useNotifications.ts
-
 import { useFetchNotificationsQuery } from "@/api/notification/fetch-notification";
 import { useFetchSingleNotificationQuery } from "@/api/notification/get-notification";
 import { useCreateNotificationMutation } from "@/api/notification/post-notification";
 import { useUpdateNotificationMutation } from "@/api/notification/update-notification";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo } from "react";
+import { getApiErrorMessage } from "@/api/utils";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useDebounce } from "./useDebounce";
+import { useSearchTerm } from "./useSearchTerm";
 
 // Validation schema
 const notificationSchema = z.object({
@@ -50,17 +50,7 @@ export const useNotifications = ({
   onSuccess,
   enableForm = false,
 }: UseNotificationsProps = {}) => {
-  const debouncedSearchTerm = useDebounce(searchInput, 500);
-
-  console.log("notificationId------3", notificationId);
-
-  // Only search if input is 3+ characters or empty (to show all)
-  const searchTerm = useMemo(() => {
-    const trimmedSearch = debouncedSearchTerm?.trim() || "";
-    return trimmedSearch.length >= 3 || trimmedSearch.length === 0
-      ? trimmedSearch
-      : null;
-  }, [debouncedSearchTerm]);
+  const searchTerm = useSearchTerm(useDebounce(searchInput, 500));
 
   // List notifications query
   const {
@@ -87,8 +77,6 @@ export const useNotifications = ({
       enabled: isEditMode,
     });
 
-  console.log("notificationData", notificationData);
-
   // Mutations
   const createMutation = useCreateNotificationMutation();
   const updateMutation = useUpdateNotificationMutation(notificationId || "");
@@ -109,7 +97,6 @@ export const useNotifications = ({
   // Populate form when editing
   useEffect(() => {
     if (isEditMode && notificationData) {
-      console.log("notificationData0-----3", notificationData);
       reset({
         title: notificationData.title,
         message: notificationData.message,
@@ -132,12 +119,10 @@ export const useNotifications = ({
 
       reset();
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error) {
       const action = isEditMode ? "update" : "create";
       toast.error(`Failed to ${action} announcement`, {
-        description:
-          error?.response?.data?.message ||
-          "Please try again or contact support if the issue persists.",
+        description: getApiErrorMessage(error),
       });
     }
   };

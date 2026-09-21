@@ -1,9 +1,10 @@
-// src/api/profile/fetch-user-by-id.ts
-
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { QueryOptions } from "../types";
 
-interface UserDetail {
+export interface UserDetail {
   id: string;
   full_name: string | null;
   username: string | null;
@@ -32,31 +33,17 @@ interface UserDetail {
   active_subscription: boolean;
 }
 
-interface UseFetchUserByIdQueryOptions {
-  userId: string;
-  enabled?: boolean;
-}
-
 export const useFetchUserByIdQuery = ({
   userId,
   enabled = true,
-}: UseFetchUserByIdQueryOptions) => {
-  return useQuery<UserDetail, Error>({
-    queryKey: ["user-detail", userId],
-
+}: QueryOptions & { userId: string }) =>
+  useQuery<UserDetail, Error>({
+    queryKey: queryKeys.users.detail(userId),
     queryFn: async () => {
-      const response = await axiosInstance.get<UserDetail>(
-        `/admin/user/${userId}/`,
+      const { data } = await axiosInstance.get<UserDetail>(
+        ENDPOINTS.users.detail(userId),
       );
-      return response.data;
+      return data;
     },
-
     enabled: enabled && !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    retry: 2,
   });
-};
-
-export type { UserDetail };

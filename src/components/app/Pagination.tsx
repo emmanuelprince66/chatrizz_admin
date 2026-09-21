@@ -35,13 +35,16 @@ export function Pagination({
   const canGoNext = currentPage < totalPages;
 
   return (
-    <div className="flex items-center justify-between px-2 py-4">
-      <div className="flex-1 text-sm text-muted-foreground">
-        Page {currentPage} of {totalPages}
-      </div>
-      <div className="flex items-center space-x-6 lg:space-x-8">
-        <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
+    <div className="flex flex-col-reverse items-center gap-3 sm:flex-row sm:justify-between">
+      <p className="text-sm text-muted-foreground">
+        Page {currentPage} of {Math.max(totalPages, 1)}
+      </p>
+      <div className="flex w-full items-center justify-between gap-4 sm:w-auto sm:justify-end sm:gap-6">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium">
+            <span className="hidden sm:inline">Rows per page</span>
+            <span className="sm:hidden">Rows</span>
+          </p>
           <Select
             value={`${pageSize}`}
             onValueChange={(value) => {
@@ -60,7 +63,7 @@ export function Pagination({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center space-x-6 gap-3">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             className="hidden h-8 w-8 p-0 lg:flex"

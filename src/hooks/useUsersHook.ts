@@ -1,7 +1,7 @@
 import { useFetchGroupsQuery } from "@/api/profile/fetch-groups";
 import { useFetchUsersQuery } from "@/api/profile/fetch-user";
-import { useMemo } from "react";
 import { useDebounce } from "./useDebounce";
+import { useSearchTerm } from "./useSearchTerm";
 
 interface UseUsersHookProps {
   searchInput: string;
@@ -16,15 +16,7 @@ export const useUsersHook = ({
   activeFilter,
   pageSize = 15,
 }: UseUsersHookProps) => {
-  const debouncedSearchTerm = useDebounce(searchInput, 500);
-
-  // Only search if input is 3+ characters or empty (to show all)
-  const searchTerm = useMemo(() => {
-    const trimmedSearch = debouncedSearchTerm?.trim() || "";
-    return trimmedSearch.length >= 3 || trimmedSearch.length === 0
-      ? trimmedSearch
-      : null;
-  }, [debouncedSearchTerm]);
+  const searchTerm = useSearchTerm(useDebounce(searchInput, 500));
 
   const isUsersActive = activeFilter === "Users";
 

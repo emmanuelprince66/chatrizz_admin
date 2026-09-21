@@ -1,44 +1,29 @@
-// src/api/admin/post-admin.ts
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { Admin, AdminRole } from "./fetch-admin";
 
-interface CreateAdminPayload {
+export interface CreateAdminPayload {
   full_name: string;
   email: string;
-  role: "Administrator" | "Sub-admin";
+  role: AdminRole;
 }
 
-interface CreateAdminResponse {
-  id: string;
-  full_name: string;
-  email: string;
-  role: string;
-  admin_role: string;
-  is_active: boolean;
-  created_at: string;
-}
+export type CreateAdminResponse = Admin;
 
 export const useCreateAdminMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation<CreateAdminResponse, Error, CreateAdminPayload>({
-    mutationFn: async (payload: CreateAdminPayload) => {
-      const response = await axiosInstance.post<CreateAdminResponse>(
-        "/admin/team/",
+    mutationFn: async (payload) => {
+      const { data } = await axiosInstance.post<CreateAdminResponse>(
+        ENDPOINTS.admins.list,
         payload,
       );
-      return response.data;
+      return data;
     },
-    onSuccess: () => {
-      // Invalidate and refetch all admins queries
-      queryClient.invalidateQueries({ queryKey: ["admins"] });
-    },
-    onError: (error) => {
-      console.error("Failed to create admin:", error);
-    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins.all }),
   });
 };
-
-// Export types
-export type { CreateAdminPayload, CreateAdminResponse };

@@ -1,10 +1,9 @@
+import type { OverviewReport } from "@/api/overview/fetch-overview";
 import { formatDate } from "@/util/format-date";
 import { type ColumnDef } from "@tanstack/react-table";
 
-// Define the reportsInfo type based on the provided data structure
-
 export const useReportsRecentColumns = () => {
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<OverviewReport>[] = [
     {
       accessorKey: "id",
       header: "Report ID",

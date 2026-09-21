@@ -1,18 +1,11 @@
-export interface User {
+/** The signed-in admin. Tokens are never part of this object; they live in cookies only. */
+export interface AuthUser {
   id: string;
   email: string;
-  name: string;
-  role: string;
-  permissions: string[];
-  avatar?: string;
-  createdAt: string;
-}
-
-export interface AuthState {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
+  is_verified: boolean;
+  profile: boolean;
+  role?: string;
+  permissions?: string[];
 }
 
 export interface LoginCredentials {
@@ -20,14 +13,14 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface RegisterCredentials {
-  email: string;
-  password: string;
-  name: string;
-  confirmPassword: string;
+export interface LoginResponse extends AuthUser {
+  tokens: {
+    access: string;
+    refresh: string;
+  };
 }
 
-export interface AuthResponse {
-  user: User;
-  token: string;
+export interface TokenRefreshResponse {
+  access: string;
+  refresh?: string;
 }

@@ -1,39 +1,24 @@
-// src/api/notifications/get-notification.ts
-
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "../axios";
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: "ALL" | "ADMINS" | "INDIVIDUAL" | "BUSINESS" | "ORGANIZATION";
-  channel: "IN-APP" | "PUSH" | "EMAIL";
-  created_at: string;
-}
-
-interface FetchSingleNotificationConfig {
-  enabled?: boolean;
-}
+import { ENDPOINTS } from "../endpoints";
+import { queryKeys } from "../query-keys";
+import type { QueryOptions } from "../types";
+import type { Notification } from "./fetch-notification";
 
 export const useFetchSingleNotificationQuery = (
   id: string | null | undefined,
-  config?: FetchSingleNotificationConfig,
-) => {
-  return useQuery<Notification, Error>({
-    queryKey: ["notification", id],
+  options?: QueryOptions,
+) =>
+  useQuery<Notification, Error>({
+    queryKey: queryKeys.notifications.detail(id),
     queryFn: async () => {
-      if (!id) throw new Error("No ID provided");
-
-      const response = await axiosInstance.get<Notification>(
-        `/admin/single_broadcast/${id}`,
+      if (!id) throw new Error("Notification id is required");
+      const { data } = await axiosInstance.get<Notification>(
+        ENDPOINTS.notifications.detail(id),
       );
-      return response.data;
+      return data;
     },
-    enabled: config?.enabled !== undefined ? config.enabled : !!id,
-    staleTime: 5 * 60 * 1000,
-    retry: 2,
+    enabled: !!id && (options?.enabled ?? true),
   });
-};
 
 export type { Notification };

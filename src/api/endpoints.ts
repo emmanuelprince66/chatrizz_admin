@@ -5,6 +5,8 @@ export const ENDPOINTS = {
     refresh: "/auth/refresh_token/",
     logout: "/auth/logout/",
     changePassword: "/auth/change-password/",
+    /** The signed-in admin's own profile. */
+    profile: "/admin/profile/",
   },
   overview: "/admin/overview/",
   admins: {

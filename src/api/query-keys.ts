@@ -3,6 +3,7 @@
  * invalidates every list and detail query nested beneath it.
  */
 export const queryKeys = {
+  profile: ["profile", "me"] as const,
   overview: {
     all: ["overview"] as const,
     summary: (params: object) => ["overview", params] as const,
